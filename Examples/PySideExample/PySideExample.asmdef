@@ -1,0 +1,14 @@
+{
+    "name": "PythonExample",
+    "references": [
+        "Unity.Scripting.Python.Editor"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
