@@ -1,7 +1,7 @@
 {
   "name": "com.unity.scripting.python",
   "displayName": "Python for Unity",
-  "version": "2.0.0-preview.6",
+  "version": "2.0.1-preview.2",
   "dependencies": {},
   "unity": "2019.3",
   "description": "An integration of Python for .NET delivered to your project through the Package Manager, Python for Unity provides your Unity project the means to import the Python Runtime Environment as a namespace and execute Python scripts from both inside the Unity editor and built applications.",
@@ -10,8 +10,26 @@
     "python.net"
   ],
   "repository": {
+    "footprint": "1268b6a11b9ada666d4591b354d6da6954a29bd8",
     "type": "git",
-    "url": "git@github.com:Unity-Technologies/com.unity.scripting.python.git",
-    "revision": "81d55e4fb8f9ff7e8479ffb32e87329b15bcf273"
-  }
+    "url": "https://github.com/Unity-Technologies/com.unity.scripting.python.git",
+    "revision": "d8dc5dcb11d9ea9fe94fb82c5fff47b7d7e09451"
+  },
+  "samples": [
+    {
+      "displayName": "Eval-exec example",
+      "description": "Example client showing how to control a client from within Unity. Send exec() commands to the client to make it run Python commands. Send eval() commands to get the results. You can use the client as a base class for your own clients.",
+      "path": "Samples~/EvalExecExample"
+    },
+    {
+      "displayName": "PySide Camera Selector",
+      "description": "Demonstrates how to build a custom tool with a PySide UI with two-way interaction with Unity: it inspects the Unity scene to get the list of cameras, but also Unity tells the UI when cameras are added.",
+      "path": "Samples~/PySideExample"
+    },
+    {
+      "displayName": "REPL client example",
+      "description": "This sample shows how to build a client that sends commands to Unity from outside. It implements a read-eval-print loop (REPL). If you type in commands like `x = UnityEngine.Application.dataPath` they will be evaluated within Unity. The keyword `log` prints to the Unity Console and demonstrates how to make an asynchronous call.",
+      "path": "Samples~/ReplClientExample"
+    }
+  ]
 }

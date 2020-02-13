@@ -1,0 +1,4 @@
+{
+    "displayName" : "Eval-exec example",
+    "description" : "Example client showing how to control a client from within Unity. Send exec() commands to the client to make it run Python commands. Send eval() commands to get the results. You can use the client as a base class for your own clients."
+}

@@ -12,6 +12,8 @@ quantity of Assets.
 - Authoring custom editor tools that could both use complex UI elements and 
 interact natively with other DCC suites.
 
+Python for Unity requires [installing third-party software](installation.md).
+
 Python for Unity provides:
 * A [Python Script Editor](PythonScriptEditor.md) window principally aimed at
   Technical Artists who want to run short scripts and easily create new menu

@@ -2,7 +2,21 @@
 
 RELEASE NOTES
 
-## [2.0.0-preview.6] - 2019-01-08
+## [2.0.1-preview.2] - 2020-02-13
+
+This is a bugfix release for 2.0.0-preview.
+
+FIXES
+* Improved handling of a Python installation that can't find its home. Unity now displays an error rather than crashing.
+* Fixed repeated registration of an OnUpdate callback.
+* Prevented the Python top-level menu being added by default. Unpack the sample clients manually from the Package Manager instead.
+* The tilde character (~) in Python path and site-packages is now interpreted as the user home directory on all platforms.
+* In the Python Console, Ctrl-enter with no selection now executes the entire script (Cmd-enter on macOS).
+* Fixed the year in 2.0.0-preview.6 release date below. It's already 2020 apparently.
+
+## [2.0.0-preview.6] - 2020-01-08
+
+This is the first public release of Python for Unity.
 
 SECURITY FIX
 * Earlier versions opened an internet socket that could let anyone connect. This has been replaced with a Unix domain socket, so file permissions are used. As a side effect, out-of-process performance is much faster.

@@ -138,11 +138,13 @@ namespace UnityEditor.Scripting.Python
             using (Py.GIL())
             {
                 dynamic server_module = PythonEngine.ImportModule("unity_python.server.server");
-                server_module.start_server();
+                if (server_module.start_server())
+                {
+                    EditorApplication.update += OnUpdate;
+                    EditorApplication.quitting += OnQuit;
+                    PythonEngine.AddShutdownHandler(OnReload);
+                }
             }
-            EditorApplication.update += OnUpdate;
-            EditorApplication.quitting += OnQuit;
-            PythonEngine.AddShutdownHandler(OnReload);
         }
 
         /// <summary>
@@ -154,12 +156,22 @@ namespace UnityEditor.Scripting.Python
         [PyGIL]
         public static void StopServer(bool inviteReconnect)
         {
-            EditorApplication.update -= OnUpdate;
-            EditorApplication.quitting -= OnQuit;
-            PythonEngine.RemoveShutdownHandler(OnReload);
+            // If we haven't initialized, there's nothing to stop.
+            if (!s_IsOutOfProcessInitialized)
+            {
+                return;
+            }
 
-            dynamic server_module = PythonEngine.ImportModule("unity_python.server.server");
-            server_module.close_server(inviteReconnect);
+            using (Py.GIL())
+            {
+                dynamic server_module = PythonEngine.ImportModule("unity_python.server.server");
+                if (server_module.close_server(inviteReconnect))
+                {
+                    EditorApplication.update -= OnUpdate;
+                    EditorApplication.quitting -= OnQuit;
+                    PythonEngine.RemoveShutdownHandler(OnReload);
+                }
+            }
         }
 
         /// <summary>
@@ -568,6 +580,24 @@ namespace UnityEditor.Scripting.Python
             PythonEngine.PythonHome = "/usr";
 #endif // UNITY_EDITOR_OSX
 
+            // Validate the Python install and/or PYTHONHOME
+            var pythonhomeFound = false;
+            var paths = PythonEngine.PythonPath.Split(Path.PathSeparator);
+            foreach (var path in paths)
+            {
+                if ( File.Exists($"{path}/site.py")
+                 || (Path.GetExtension(path).ToLower() == ".zip" && File.Exists(path) ) )
+                {
+                    pythonhomeFound = true;
+                    break;
+                }
+            }
+
+            if (!pythonhomeFound)
+            {
+                throw new PythonInstallException("'site.py' could no be found. Verify that your Python 2.7 installation has not been moved or deleted, or that PYTHOMHOME points to the correct location.");
+            }
+
             ///////////////////////
             // Initialize the engine if it hasn't been initialized yet.
             PythonEngine.Initialize();
@@ -668,7 +698,16 @@ namespace UnityEditor.Scripting.Python
             {
                 if (!string.IsNullOrEmpty(settingsPackage))
                 {
-                    var settingsSitePackage = Path.GetFullPath(settingsPackage);
+                    var settingsSitePackage = settingsPackage;
+                    // C# can't do tilde expansion. Do a very basic expansion.
+                    if (settingsPackage.StartsWith("~"))
+                    {
+                        var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                        // Don't use Path.Combine here. If settingsPackage starts with a '/', then 
+                        // settingsPackage will be returned. As per documented behaviour.
+                        settingsSitePackage = homeDirectory + "/" + settingsPackage.Substring(1);
+                    }
+                    settingsSitePackage = Path.GetFullPath(settingsSitePackage);
                     settingsSitePackage = settingsSitePackage.Replace("\\", "/");
                     sitePackages.Add(settingsSitePackage);
                 }
@@ -805,39 +844,5 @@ namespace UnityEditor.Scripting.Python
             // We want to stop the client and server on application exit
             EditorApplication.quitting += OnQuit;
         }
-
-    #if DEBUG
-        [MenuItem("Python/Debug/Start rpyc server")]
-        private static void DebugStartServer()
-        {
-            StartServer();
-        }
-
-        [MenuItem("Python/Debug/Stop rpyc server (no reconnect)")]
-        private static void DebugStopServerHard()
-        {
-            StopServer(inviteReconnect: false);
-        }
-
-        [MenuItem("Python/Debug/Stop rpyc server (reconnect)")]
-        private static void DebugStopServerSoft()
-        {
-            StopServer(inviteReconnect: true);
-        }
-
-        [MenuItem("Python/Debug/List connected clients")]
-        private static void DebugListConnectedClients()
-        {
-            string[] test = GetConnectedClients();
-
-            if (test.Length == 0)
-                Debug.Log("No connected clients.");
-
-            foreach (string i in test)
-            {
-                Debug.Log(i);
-            }
-        }
-    #endif
     }
 }

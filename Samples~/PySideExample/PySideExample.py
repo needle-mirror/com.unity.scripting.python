@@ -9,7 +9,7 @@ When the user selects a camera in the PySide view and clicks "Use Camera",
 Unity switches to using that camera in the Scene View.
 
 The user can stat the client in two ways:
-1. Within Unity, via the Python/Examples/PySide Example menu.
+1. Within Unity, via the Python/Samples/PySide Example menu.
 2. From the command-line, by running this script.
 """
 

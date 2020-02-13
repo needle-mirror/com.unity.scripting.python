@@ -12,6 +12,8 @@ You must use Windows 10, patched to build 1803 or later.
 
 Install the software listed above in the default locations.
 
+When installing Python, make sure to check the option to add to the path is on.
+
 To get PySide after installing Python, open a command terminal and run:
 ```
 pip install pyside

@@ -24,7 +24,7 @@ namespace UnityEditor.Scripting.Python
             s_window.titleContent = new GUIContent("Python Script Editor");
 
             // Handle window sizing.
-            s_window.minSize = new Vector2(450, 300);
+            s_window.minSize = new Vector2(550, 300);
         }
 
         public void OnEnable()
@@ -73,7 +73,7 @@ namespace UnityEditor.Scripting.Python
 
             // Implement event handlers.
             m_textFieldCode.RegisterCallback<ChangeEvent<string>>(OnCodeInput);
-            m_textFieldCode.Q(TextField.textInputUssName).RegisterCallback<KeyDownEvent>(OnPartialExecute);
+            m_textFieldCode.Q(TextField.textInputUssName).RegisterCallback<KeyDownEvent>(OnExecute);
 
             tbButtonLoad.RegisterCallback<MouseUpEvent>(OnLoad);
             tbButtonSave.RegisterCallback<MouseUpEvent>(OnSave);
@@ -131,7 +131,7 @@ namespace UnityEditor.Scripting.Python
         // Were the right key pressed? This variable is used by the subsequent code to keep track of the two events generated on key press.
         bool m_wereActionEnterPressed;
         // Key(s) are pressed while the Code area is in focus. 
-        void OnPartialExecute(KeyDownEvent e)
+        void OnExecute(KeyDownEvent e)
         {
             // Verify that the Action (Control/Command) and Return (Enter/KeypadEnter) keys were pressed, or that the KeypadEnter was pressed.
             // This 'catches' the first event. This event carries the keyCode(s), but no character information.
@@ -139,7 +139,15 @@ namespace UnityEditor.Scripting.Python
             if (e.keyCode == KeyCode.KeypadEnter || (e.actionKey == true && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)) )
             {
                 m_wereActionEnterPressed = true;
-                PartialExecute();
+                if (!string.IsNullOrEmpty(GetSelectedCode()))
+                {
+                    PartialExecute();
+                }
+                else
+                {
+                    ExecuteAll();
+                    e.PreventDefault();
+                }
             }
 
             // If the right keys were pressed, prevent the KeyDownEvent's default behaviour.
@@ -155,7 +163,7 @@ namespace UnityEditor.Scripting.Python
         // 'Execute' is pressed.
         void OnExecute(MouseUpEvent e)
         {
-            PythonRunner.RunString(m_codeContents);
+            ExecuteAll();
         }
 
         // 'Load' is pressed.
@@ -272,11 +280,20 @@ namespace UnityEditor.Scripting.Python
             }
         }
 
+        void Execute (string code)
+        {
+            PythonRunner.RunString(code);
+        }
+
         // Execute only the current selection.
         void PartialExecute()
         {
-            string codeToExecute = GetSelectedCode();
-            PythonRunner.RunString(codeToExecute);
+            Execute(GetSelectedCode());
+        }
+
+        void ExecuteAll ()
+        {
+            Execute(m_codeContents);
         }
        
 #endregion

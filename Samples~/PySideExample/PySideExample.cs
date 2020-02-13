@@ -12,6 +12,17 @@ namespace PythonExample
     /// </summary>
     public class PySideExample
     {
+
+        /// <summary>
+        /// Hack to get the current file's directory
+        /// </summary>
+        /// <param name="fileName">Leave it blank to the current file's directory</param>
+        /// <returns></returns>
+        private static string __DIR__([System.Runtime.CompilerServices.CallerFilePath] string fileName = "")
+        {
+            return Path.GetDirectoryName(fileName);
+        }
+
         /// <summary>
         /// Menu to launch the client
         /// </summary>
@@ -19,7 +30,7 @@ namespace PythonExample
         public static void OnMenuClick()
         {
             PythonRunner.SpawnClient(
-                    file: "Packages/com.unity.scripting.python/Examples/PySideExample/PySideExample.py", 
+                    file: $"{__DIR__()}/PySideExample.py", 
                     wantLogging: true);
         }
 

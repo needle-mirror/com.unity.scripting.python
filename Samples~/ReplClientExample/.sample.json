@@ -1,0 +1,4 @@
+{
+    "displayName" : "REPL client example",
+    "description" : "This sample shows how to build a client that sends commands to Unity from outside. It implements a read-eval-print loop (REPL). If you type in commands like `x = UnityEngine.Application.dataPath` they will be evaluated within Unity. The keyword `log` prints to the Unity Console and demonstrates how to make an asynchronous call."
+}

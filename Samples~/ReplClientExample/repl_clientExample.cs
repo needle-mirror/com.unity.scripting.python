@@ -1,6 +1,6 @@
 #if UNITY_EDITOR_WIN || UNITY_EDITOR_LINUX
 
-using System.Diagnostics;
+using System.IO;
 using UnityEditor;
 using UnityEditor.Scripting.Python;
 using UnityEngine;
@@ -10,10 +10,20 @@ namespace PythonExample
 {
     public class ReplClientExample
     {
+        /// <summary>
+        /// Hack to get the current file's directory
+        /// </summary>
+        /// <param name="fileName">Leave it blank to the current file's directory</param>
+        /// <returns></returns>
+        private static string __DIR__([System.Runtime.CompilerServices.CallerFilePath] string fileName = "")
+        {
+            return Path.GetDirectoryName(fileName);
+        }
+
         [MenuItem("Python/Examples/Repl Client Example")]
         public static void OnMenuClick()
         {
-            string replClientFile = "Packages/com.unity.scripting.python/Examples/ReplClientExample/repl_clientExample.py";
+            string replClientFile = $"{__DIR__()}/repl_clientExample.py";
 #if UNITY_EDITOR_WIN
             PythonRunner.SpawnClient(
                     file: replClientFile, 
