@@ -1,4 +1,4 @@
-﻿// This widget is a modified version of that included in the UIElementsExample project.
+// This widget is a modified version of that included in the UIElementsExample project.
 
 #if UNITY_2019_1_OR_NEWER
 
@@ -31,10 +31,10 @@ namespace UnityEditor.UIElements
 
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
-            UxmlIntAttributeDescription m_FixedPaneIndex = new UxmlIntAttributeDescription { name = "fixed-pane-index", defaultValue = 0 };
-            UxmlIntAttributeDescription m_FixedPaneInitialSize = new UxmlIntAttributeDescription { name = "fixed-pane-initial-size", defaultValue = 100 };
-            UxmlStringAttributeDescription m_Orientation = new UxmlStringAttributeDescription { name = "orientation", defaultValue = "horizontal" };
-            UxmlIntAttributeDescription m_Buffer = new UxmlIntAttributeDescription { name = "buffer", defaultValue = 100 };
+            readonly UxmlIntAttributeDescription m_FixedPaneIndex = new UxmlIntAttributeDescription { name = "fixed-pane-index", defaultValue = 0 };
+            readonly UxmlIntAttributeDescription m_FixedPaneInitialSize = new UxmlIntAttributeDescription { name = "fixed-pane-initial-size", defaultValue = 100 };
+            readonly UxmlStringAttributeDescription m_Orientation = new UxmlStringAttributeDescription { name = "orientation", defaultValue = "horizontal" };
+            readonly UxmlIntAttributeDescription m_Buffer = new UxmlIntAttributeDescription { name = "buffer", defaultValue = 100 };
 
             public override IEnumerable<UxmlChildElementDescription> uxmlChildElementsDescription
             {

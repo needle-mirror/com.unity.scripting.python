@@ -12,15 +12,11 @@ quantity of Assets.
 - Authoring custom editor tools that could both use complex UI elements and 
 interact natively with other DCC suites.
 
-Python for Unity requires [installing third-party software](installation.md).
-
 Python for Unity provides:
 * A [Python Script Editor](PythonScriptEditor.md) window principally aimed at
   Technical Artists who want to run short scripts and easily create new menu
   items that run Python code.
-* An [in-process API](inProcessAPI.md) aimed at Pipeline Technical Directors
+* An [API](inProcessAPI.md) aimed at Pipeline Technical Directors
   who want to call studio scripts implemented in Python from C# and vice versa.
-* An [out-of-process API](outOfProcessAPI.md) aimed at Pipeline Technical
-  Directors who want to create a live link between Unity and their studio's custom
-  applications implemented in Python.
 * [Project Settings](settings.md).
+* Installing and loading [Pip Packages](settings.md#pipPackages).

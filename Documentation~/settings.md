@@ -8,57 +8,64 @@ Edit menu.
 The top of the window is useful information when looking for help to explain
 exactly which version of the various components you are using.
 
-The version of Python that runs [in-process](inProcessAPI.md) depends on your
-system settings and cannot be changed via the Project Settings. It is displayed
-for information purposes in the Project Settings. It is also displayed in
-longer form in the Editor.log.
+## Component Versions
 
-You can change the version of Python that normally runs
-[out-of-process](outOfProcessAPI.md).  By default the field is blank, which
-signals to find Python in your system PATH.  In the image above, taken on a
-macOS machine, we are using the MacPorts Python. You can set this field to
-Python interpreters that ship with various applications in order to easily use
-their packages (see the macOS [installation instructions](installation.md) for
-example). Changes are only applied after you restart Unity.
+Python for Unity bundles with it a copy of the CPython implementation for Python
+along with a custom build of Python for .NET. For information purposes the
+Settings panel verifies which version of each is in fact installed. They cannot
+be changed.
+
+## Site Packages
 
 You can add site-packages that will be added to the `sys.path` to find
 additional Python modules. Changes are only applied after you restart Unity.
 
-If [out-of-process](outOfProcessAPI.md) clients have connected to Unity they
-will show up in the Troubleshooting section. This helps understand whether
-misbehaving clients are connected or not; and if so, it allows you to force
-them to disconnect.
+![Python for Unity Site Packages Settings](images/project-settings-site-packages.png)
 
-## Troubleshooting
+<a name="pipPackages"></a>
 
-In the troubleshooting section you can see all the clients that are connected
-to Unity using Python for Unity.  If one of them is misbehaving, you can
-`disconnect` from it, or `reset` (which disconnects from the client but invites
-it to reconnect). You can also restart the server, which simultaneously resets
-all the clients.
+## Pip Packages
 
-The troubleshooting section displays the path to the RPC socket being used. In
-this version of Python for Unity there is no supported way to change that
-socket: it is hard-coded in the file `settings.py`.
+You can install Python packages using pip for your project. They will be installed
+inside the `Library/PythonInstall/Lib/site-packages` folder of the project.
 
-If, when resetting the server, you get an error relating to a lock file, or to
-the socket address already being in use, check where there is another copy of
-Unity running (perhaps in the background). Only one copy of Unity at a time can
-use Python. Multiple different users on the same machine can each use one copy
-of Unity.
+### Installing packages with a requirements file
 
-The "rarely-needed" timeout is not likely to be useful. When you set the
-External Python, the Python for Unity package executes it to discover which
-version of Python it is (and to determine that it in fact Python). Normally the
-response is nearly immediate; if it takes longer than the timeout, it is
-assumed to not be Python. In the very unlikely case that Python takes longer
-than 1 second to start up and report its version number on your system, you
-will need to increase this timeout.
+You can store your required Python packages with their versions in a `requirements.txt`
+file.
+
+If you want to share your Unity project with someone else or you are working in a
+team, sharing the `requirements.txt` file will ensure everyone is using the same
+versions of the same packages. Simply opening a project with a `requirements.txt` file
+will automatically install any missing packages, and uninstall unused ones.
+
+Place the requirements file in `ProjectSettings/requirements.txt` in your Unity project
+for the Python for Unity package to find it.
+
+For details on creating a requirements file and its uses, please refer to the [pip documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files).
+
+Unity will only apply the `requirements.txt` when you open a project.
+If you change the `requirements.txt` while you have a project open (for example, if you update your project from revision control while Unity is running),
+the Python packages will not update. To apply the new requirements you will need to restart Unity.
+
+### Installing packages on the command-line (Windows only)
+
+Click on the `Spawn shell in environment` button which is available in the
+settings panel on Windows. A PowerShell window will pop up.
+
+Use `pip` to manage your local packages:
+
+![Python for Unity Install Pip Packages](images/project-settings-pip-examples.png)
+
+After making changes to the Python packages, make sure to update the
+`ProjectSettings/requirements.txt` file. Otherwise your changes will be
+reverted next time you reopen the project. You can use this command for example:
+```
+pip freeze > ProjectSettings/requirements.txt
+```
 
 ## Limitations
 
-* On Windows, you must use Windows 10 build 1803 (spring 2018) or newer.
-* Only one copy of Unity can run Python for Unity at a time per user, per machine.
-* You cannot change the internal Python version.
+* You cannot change the internal Python version nor use a virtual environment manager like `venv` or `conda`.
 * Paths are treated as verbatim strings. You will need to expand environment
   variables or (on macOS and linux) the `~` denoting the home directory.

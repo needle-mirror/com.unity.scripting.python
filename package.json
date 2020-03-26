@@ -1,37 +1,26 @@
 {
   "name": "com.unity.scripting.python",
   "displayName": "Python for Unity",
-  "version": "2.1.1-preview.1",
-  "dependencies": {},
-  "unity": "2019.3",
+  "version": "4.0.0-exp.5",
+  "unity": "2019.4",
   "description": "An integration of Python for .NET delivered to your project through the Package Manager, Python for Unity provides your Unity project the means to import the Python Runtime Environment as a namespace and execute Python scripts from both inside the Unity editor and built applications.",
   "keywords": [
     "python",
     "python.net"
   ],
   "upmCi": {
-    "footprint": "c2289e9fdb59cddf2e859579ad7529e0cef9fb69"
+    "footprint": "f4ffbb05a5985769620e3b147f7cb1c1e9c40a4b"
   },
   "repository": {
-    "url": "https://github.com/Unity-Technologies/com.unity.scripting.python.git",
+    "url": "https://github.cds.internal.unity3d.com/unity/com.unity.scripting.python.git",
     "type": "git",
-    "revision": "5904a73e0064ab5a51a30e9598f3ace8bf691ad8"
+    "revision": "e55c0d499772bf7151c2bae52c3b83bb53ae490c"
   },
   "samples": [
-    {
-      "displayName": "Eval-exec example",
-      "description": "Example client showing how to control a client from within Unity. Send exec() commands to the client to make it run Python commands. Send eval() commands to get the results. You can use the client as a base class for your own clients.",
-      "path": "Samples~/EvalExecExample"
-    },
     {
       "displayName": "PySide Camera Selector",
       "description": "Demonstrates how to build a custom tool with a PySide UI with two-way interaction with Unity: it inspects the Unity scene to get the list of cameras, but also Unity tells the UI when cameras are added.",
       "path": "Samples~/PySideExample"
-    },
-    {
-      "displayName": "REPL client example",
-      "description": "This sample shows how to build a client that sends commands to Unity from outside. It implements a read-eval-print loop (REPL). If you type in commands like `x = UnityEngine.Application.dataPath` they will be evaluated within Unity. The keyword `log` prints to the Unity Console and demonstrates how to make an asynchronous call.",
-      "path": "Samples~/ReplClientExample"
     }
   ]
 }

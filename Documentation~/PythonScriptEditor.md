@@ -5,7 +5,7 @@ The easiest way to start using Python for Unity is with the Python Script Editor
 ![Launching the Python Script Editor](images/python-console-how.png)
 
 You can type Python statements in the bottom window. Click on the `Execute`
-button or type Ctrl-Return (Cmd-Return on macOS) to run the selected text.
+button or press Ctrl-Return to run the selected text.
 
 Python `print` statements will appear in the upper window as well as in the Editor.log.
 
@@ -25,14 +25,10 @@ its `[MenuItem]`.
 
 ## Advanced Tool Programming
 
-To implement more complex Python-based tools in Unity, there are two relevant APIs:
-* The [in-process API](inProcessAPI.md) allows you to invoke Python code from
-  C# that runs in the Unity process.
-* The [out-of-process API](outOfProcessAPI.md) allows you to connect to an
-  external application, e.g. a custom tool implemented in PySide.
+To implement more complex Python-based tools in Unity, the
+[API](inProcessAPI.md) allows you to invoke Python code from C# that runs in
+the Unity process.
 
 ## Limitations
 
-Undo/redo is not implemented. Save often.
-
-Sometimes, `print` statements stop printing in the Script Editor output. The workaround is to restart Unity.
+The output has a limit of 10,000 characters.

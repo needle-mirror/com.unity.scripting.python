@@ -2,5 +2,4 @@
 * [Installation](installation)
 * [Using Python in Unity](PythonScriptEditor)
     * [Python Settings](settings)
-    * [Using the In-Process API](inProcessAPI)
-    * [Using the Out-of-Process API](outOfProcessAPI)
+    * [Using the API](inProcessAPI)

@@ -27,6 +27,88 @@ namespace UnityEditor.Scripting.Python
             s_window.minSize = new Vector2(550, 300);
         }
 
+        // implementation based off of https://stackoverflow.com/questions/384042/can-i-limit-the-depth-of-a-generic-stack
+        private class DropOutStack<T>
+        {
+            private T[] items;
+            private int top = 0;
+            private int currentSize = 0;
+
+            public DropOutStack(int capacity)
+            {
+                items = new T[capacity];
+            }
+
+            public void Push(T item)
+            {
+                items[top] = item;
+                top = (top + 1) % items.Length;
+                currentSize = Math.Min(currentSize+1, items.Length);
+            }
+
+            public T Pop()
+            {
+                if(IsEmpty())
+                {
+                    throw new InvalidOperationException("Popping from an empty stack");
+                }
+                top = (items.Length + top - 1) % items.Length;
+                currentSize = currentSize - 1;
+                return items[top];
+            }
+
+            public void Clear()
+            {
+                Array.Clear(items, 0, items.Length);
+                top = 0;
+                currentSize = 0;
+            }
+
+            public bool IsEmpty()
+            {
+                return currentSize <= 0;
+            }
+        }
+
+        private bool m_performedUndoRedo = false;
+        private const int m_maxStackSize = 100;
+        private DropOutStack<string> m_undoStack = new DropOutStack<string>(m_maxStackSize);
+        private DropOutStack<string> m_redoStack = new DropOutStack<string>(m_maxStackSize);
+
+        private void PerformUndoRedo(string newText)
+        {
+            m_textFieldCode.SetValueWithoutNotify(newText);
+            // make sure the cursor stays at the right position
+            var index = m_code.Length;
+            m_textFieldCode.SelectRange(index, index);
+            m_textFieldCode.MarkDirtyRepaint();
+            m_performedUndoRedo = true;
+        }
+
+        private void PerformUndo()
+        {
+            if (m_undoStack.IsEmpty())
+            {
+                // nothing to do
+                return;
+            }
+            m_redoStack.Push(m_code);
+            m_code = m_undoStack.Pop();
+            PerformUndoRedo(m_code);
+        }
+
+        private void PerformRedo()
+        {
+            if (m_redoStack.IsEmpty())
+            {
+                // nothing to do
+                return;
+            }
+            m_undoStack.Push(m_code);
+            m_code = m_redoStack.Pop();
+            PerformUndoRedo(m_code);
+        }
+
         public void OnEnable()
         {
             // Creation and assembly of the window.
@@ -71,10 +153,13 @@ namespace UnityEditor.Scripting.Python
             m_scrollerOutput = root.Query<Scroller>(className: "unity-scroller--vertical").First();
             m_scrollerCode = root.Query<Scroller>(className: "unity-scroller--vertical").Last();
 
-            // Implement event handlers.
+            // Set up the Undo handling
+            // Use the event to add to the undo stack and collapse the stack to 
+            // give a feeling closer to a real text editor undo
             m_textFieldCode.RegisterCallback<ChangeEvent<string>>(OnCodeInput);
-            m_textFieldCode.Q(TextField.textInputUssName).RegisterCallback<KeyDownEvent>(OnExecute);
 
+            // Implement event handlers.
+            m_textFieldCode.Q(TextField.textInputUssName).RegisterCallback<KeyDownEvent>(OnExecute);
             tbButtonLoad.RegisterCallback<MouseUpEvent>(OnLoad);
             tbButtonSave.RegisterCallback<MouseUpEvent>(OnSave);
             tbButtonSaveMenu.RegisterCallback<MouseUpEvent>(OnSaveShortcut);
@@ -87,8 +172,14 @@ namespace UnityEditor.Scripting.Python
 
 
             // Handle reserialization.
-            m_textFieldCode.value = m_codeContents;
+            m_textFieldCode.value = m_code;
             m_textFieldOutput.value = m_outputContents;
+
+            // Also assign to the static variable here. On some occasions,
+            // like domain reloads, the value is lost and if the window is
+            // already showing, ShowWindow() won't be called, and code output
+            // will never go to the console output.
+            s_window = this;
         }
 #endregion
 
@@ -98,34 +189,91 @@ namespace UnityEditor.Scripting.Python
         // Keep a reference on the Window for two reasons:
         // 1. Better performance
         // 2. AddToOutput is called from thread other than the main thread
-        //    and it triggers a name seasrch, which can only be done in the 
+        //    and it triggers a name search, which can only be done in the 
         //    main thread
-        static PythonConsoleWindow s_window = null;
+        internal static PythonConsoleWindow s_window = null;
 
         TextField m_textFieldCode;
         TextField m_textFieldOutput;
         ScrollView m_holderofOutputTextField;
 
         [SerializeField]
-        string m_codeContents;
+        string m_code;
+
+        // To collapse the undo stack
+        static float lastEditTime = 0;
+        static int groupid;
+
         [SerializeField]
-        string m_outputContents;
+        internal string m_outputContents;
 
         // Sizing utility variables
-        int m_borderBuffer_WindowBottom = 50;
-        int m_borderBuffer_SplitHandle = 2;
+        const int k_borderBuffer_WindowBottom = 50;
+        const int k_borderBuffer_SplitHandle = 2;
+
+        // Too much text sent into a TextField throws an error:
+        // "MakeTextMeshHandle: text is too long and generates too many vertices"
+        // It happens when the text size is above ~11000
+        // Set a limit to 10000 to have a safety margin
+        const int k_kMaxOutputLength = 10000;
 
         Scroller m_scrollerOutput;
         Scroller m_scrollerCode;
 #endregion
 
-
         #region Event Functions
 
+        int m_undoGroupCount = 0;
+        
         // Text is inputed into the Code text area.
+        // Used to collapse the undo stack so it's (mostly) consistent with a text editor.
         void OnCodeInput(ChangeEvent<string> e)
         {
-            m_codeContents = m_textFieldCode.value;
+            if (m_performedUndoRedo)
+            {
+                m_redoStack.Clear();
+                m_undoGroupCount = 0;
+                m_performedUndoRedo = false;
+            }
+
+            m_undoStack.Push(m_code);
+            m_code = e.newValue;
+
+            float curTime = Time.realtimeSinceStartup;
+            // .333 feels right; may need more adjustments
+            if ((curTime - lastEditTime) < 0.333f)
+            {
+                m_undoGroupCount++;
+            }
+            else
+            {
+                // collapse undo operations after 0.333 seconds.
+                for(int i = 0; i < m_undoGroupCount; i++)
+                {
+                    m_undoStack.Pop();
+                }
+                m_undoGroupCount = 0;
+            }
+            lastEditTime = curTime;
+        }
+        
+        const string k_undoShortcutBindingID = "Main Menu/Edit/Undo";
+        const string k_redoShortcutBindingID = "Main Menu/Edit/Redo";
+
+        private bool IsShortcutPressed(string shortcutID, KeyDownEvent e)
+        {
+            var binding = ShortcutManagement.ShortcutManager.instance.GetShortcutBinding(shortcutID);
+            foreach (var combo in binding.keyCombinationSequence)
+            {
+                if (combo.action == e.actionKey &&
+                    combo.alt == e.altKey &&
+                    combo.keyCode == e.keyCode &&
+                    combo.shift == e.shiftKey)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         // Were the right key pressed? This variable is used by the subsequent code to keep track of the two events generated on key press.
@@ -136,7 +284,7 @@ namespace UnityEditor.Scripting.Python
             // Verify that the Action (Control/Command) and Return (Enter/KeypadEnter) keys were pressed, or that the KeypadEnter was pressed.
             // This 'catches' the first event. This event carries the keyCode(s), but no character information.
             // Here we execute the Python code. The textField itself is left untouched.
-            if (e.keyCode == KeyCode.KeypadEnter || (e.actionKey == true && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)) )
+            if (e.keyCode == KeyCode.KeypadEnter || (e.actionKey == true && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)))
             {
                 m_wereActionEnterPressed = true;
                 if (!string.IsNullOrEmpty(GetSelectedCode()))
@@ -157,6 +305,17 @@ namespace UnityEditor.Scripting.Python
             {
                 e.PreventDefault();
                 m_wereActionEnterPressed = false;
+            }
+
+            if(IsShortcutPressed(k_undoShortcutBindingID, e))
+            {
+                PerformUndo();
+                return;
+            }
+
+            if(IsShortcutPressed(k_redoShortcutBindingID, e))
+            {
+                PerformRedo();
             }
         }
 
@@ -181,11 +340,10 @@ namespace UnityEditor.Scripting.Python
             // Once a file has been chosen, clear the console's current content.
             OnClearCode(e);
                 
-            // Read and copy the file's content into the m_codeContents variable.
-            m_codeContents = System.IO.File.ReadAllText(fullFilePath);
-
-            // Fill code text area.
-            m_textFieldCode.value = m_codeContents;
+            // Read and copy the file's content
+            var code = System.IO.File.ReadAllText(fullFilePath);
+            // And set the text area to it.
+            SetCode(code);
         }
 
         // 'Save' is pressed.
@@ -211,10 +369,8 @@ namespace UnityEditor.Scripting.Python
         // 'Clear Code' is pressed.
         void OnClearCode(MouseUpEvent e)
         {
-            // Set the current content variable to null.
-            m_codeContents = "";
             // Update the textfield's value.
-            m_textFieldCode.value = m_codeContents;
+            SetCode("");
         }
 
         // 'Clear Output' is pressed.
@@ -240,8 +396,12 @@ namespace UnityEditor.Scripting.Python
         // Fetch and return the current console content as a string.
         string GetCode()
         {
-            m_codeContents = m_textFieldCode.value;
-            return m_codeContents;
+            return m_textFieldCode.value;
+        }
+
+        void SetCode(string code)
+        {
+            m_textFieldCode.value = code;
         }
 
         // Fetch and return the current code selection as a string.
@@ -259,7 +419,15 @@ namespace UnityEditor.Scripting.Python
         // Set the output field's displayed content to the associated variable.
         void SetOutputField()
         {
-            m_textFieldOutput.value = m_outputContents;
+            int outputLength = m_outputContents.Length;
+            if (outputLength > k_kMaxOutputLength)
+            {
+                m_textFieldOutput.value = m_outputContents.Substring(outputLength - k_kMaxOutputLength, k_kMaxOutputLength);
+            }
+            else
+            {
+                m_textFieldOutput.value = m_outputContents;
+            }
         }
 
         // Add the inputed string to the output content.
@@ -282,7 +450,7 @@ namespace UnityEditor.Scripting.Python
 
         void Execute (string code)
         {
-            PythonRunner.RunString(code);
+            PythonRunner.RunString(code, "__main__");
         }
 
         // Execute only the current selection.
@@ -293,7 +461,7 @@ namespace UnityEditor.Scripting.Python
 
         void ExecuteAll ()
         {
-            Execute(m_codeContents);
+            Execute(GetCode());
         }
        
 #endregion
@@ -304,11 +472,11 @@ namespace UnityEditor.Scripting.Python
         private void OnGUI()
         {
             // Handle current size of the Code text field.
-            var textFieldCode_CurrentSize = rootVisualElement.contentRect.height - m_holderofOutputTextField.contentRect.height - m_borderBuffer_WindowBottom;
+            var textFieldCode_CurrentSize = rootVisualElement.contentRect.height - m_holderofOutputTextField.contentRect.height - k_borderBuffer_WindowBottom;
             m_textFieldCode.style.minHeight = textFieldCode_CurrentSize;
 
             // Handle current minimum size of the Output text field.
-            var textFieldOutput_CurrentSize = m_holderofOutputTextField.contentRect.height - m_borderBuffer_SplitHandle;
+            var textFieldOutput_CurrentSize = m_holderofOutputTextField.contentRect.height - k_borderBuffer_SplitHandle;
             m_textFieldOutput.style.minHeight = textFieldOutput_CurrentSize;
             m_holderofOutputTextField.style.minHeight = textFieldOutput_CurrentSize;
 
