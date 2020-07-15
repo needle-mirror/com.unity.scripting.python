@@ -98,6 +98,9 @@ class UnitTestClientService(unity_client.UnityClientService):
 
         return True
 
+    def exposed_wait(self, interval):
+        time.sleep(interval)
+
 if __name__ == '__main__':
     try:
         sleep_count = 0

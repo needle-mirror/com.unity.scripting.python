@@ -366,12 +366,11 @@ namespace rpycTests
                     {
                         using (Py.GIL())
                         {
-                            return processToKill.poll() != null;
+                            return processToKill.poll() != null && !PythonRunner.IsClientConnected(ClientName);
                         }
                     }
                 );
             }
-            Assert.That(PythonRunner.IsClientConnected(ClientName), Is.False);
 
             // Is the server still alive?
             string newProcessName = "testReconnect";
@@ -389,12 +388,11 @@ namespace rpycTests
                     {
                         using (Py.GIL())
                         {
-                            return newProcess.poll() != null;
+                            return newProcess.poll() != null && !PythonRunner.IsClientConnected(ClientName);
                         }
                     }
                 );
             }
-            Assert.That(PythonRunner.IsClientConnected(ClientName), Is.False);
         }
 
         [UnityTest]
@@ -545,6 +543,40 @@ namespace rpycTests
             }
 
             yield return WaitForProcessEnd(clientProcess);
+        }
+
+        [UnityTest]
+        /// <summary>
+        /// This test makes sure that a query can timeout
+        /// </summary>
+        public IEnumerator TestTimeout()
+        {
+            yield return StartClient("test_timeout_client");
+
+            // Wait for longer than the timeout. Makes sure that the 
+            // modifications to rpyc doesn't affect the timeout
+
+            //shorten the timeout for the test
+            dynamic connection = null;
+            dynamic previousTimeout = null;
+            double newTimeout = 5;
+            using (Py.GIL())
+            {
+                dynamic serverModule = Py.Import("unity_python");
+                connection = serverModule.server.server.clients[new PyString(ClientName)][0]._conn;
+                previousTimeout = connection._config[new PyString("sync_request_timeout")];
+                connection._config[new PyString("sync_request_timeout")] = newTimeout.ToPython();
+            }
+            var exc = Assert.Throws<PythonException>(() => {PythonRunner.CallServiceOnClient(ClientName, "wait", newTimeout+5);});
+            Assert.True(exc.Message.Contains("Timeout"));
+            //restore the timeout
+            using (Py.GIL())
+            {
+                connection._config[new PyString("sync_request_timeout")] = previousTimeout;
+                double timeout = connection._config[new PyString("sync_request_timeout")];
+                Assert.That(timeout, Is.EqualTo((double)previousTimeout));
+            }
+            yield return StopClientAndWaitForProcessEnd(m_lastStartedProcess);
         }
     }
 }

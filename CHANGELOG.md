@@ -2,6 +2,11 @@
 
 RELEASE NOTES
 
+## [2.1.0-preview.1] - 2020-07-15
+
+NEW FEATURES
+* Python for .NET updated to version 2.5.1
+
 ## [2.0.1-preview.2] - 2020-02-13
 
 This is a bugfix release for 2.0.0-preview.
