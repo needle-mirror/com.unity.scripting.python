@@ -48,7 +48,7 @@ namespace Tests
         {
             string evalExecClientPath = Path.Combine(
                 Path.GetFullPath("Packages/com.unity.scripting.python"), 
-                "Python", 
+                "Python~", 
                 "site-packages", 
                 "unity_python", 
                 "client", 

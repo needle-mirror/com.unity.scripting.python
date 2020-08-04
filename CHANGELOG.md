@@ -2,6 +2,15 @@
 
 RELEASE NOTES
 
+## [2.1.1-preview.1] - 2020-08-04
+
+This is a bugfix release for 2.1.0-preview.1
+
+FIXES
+* Hides the `Python` folder from the Asset Database, fixing an issue where Unity complained about missing meta files
+* Fixed an error launching a Python client when Environment Variables and/or their values would contain non-ASCII characters. 
+  These variables are now not forwarded to the python client. This is due to a Python 2 limitation.
+
 ## [2.1.0-preview.1] - 2020-07-15
 
 NEW FEATURES

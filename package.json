@@ -1,7 +1,7 @@
 {
   "name": "com.unity.scripting.python",
   "displayName": "Python for Unity",
-  "version": "2.1.0-preview.1",
+  "version": "2.1.1-preview.1",
   "dependencies": {},
   "unity": "2019.3",
   "description": "An integration of Python for .NET delivered to your project through the Package Manager, Python for Unity provides your Unity project the means to import the Python Runtime Environment as a namespace and execute Python scripts from both inside the Unity editor and built applications.",
@@ -10,12 +10,12 @@
     "python.net"
   ],
   "upmCi": {
-    "footprint": "d2b333486073faaac2f5056656b97426240a6290"
+    "footprint": "c2289e9fdb59cddf2e859579ad7529e0cef9fb69"
   },
   "repository": {
     "url": "https://github.com/Unity-Technologies/com.unity.scripting.python.git",
     "type": "git",
-    "revision": "836452e1964869208f13bb10d5a76a7dacc62e3b"
+    "revision": "5904a73e0064ab5a51a30e9598f3ace8bf691ad8"
   },
   "samples": [
     {

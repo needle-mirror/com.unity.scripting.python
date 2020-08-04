@@ -22,7 +22,7 @@ namespace UnityEditor.Scripting.Python
         /// </summary>
         public static string Version
         {
-            get { return "2.1.0-preview.1"; }
+            get { return "2.1.1-preview.1"; }
         }
 
         public static string PythonNetVersion

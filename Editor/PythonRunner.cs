@@ -123,7 +123,7 @@ namespace UnityEditor.Scripting.Python
             StartServer();
 #if UNITY_2019_1_OR_NEWER
             // Add stream redirection for the console
-            RunFile("Packages/com.unity.scripting.python/Python/site-packages/redirecting_stdout.py");
+            RunFile("Packages/com.unity.scripting.python/Python~/site-packages/redirecting_stdout.py");
 #endif
         }
 
@@ -675,9 +675,9 @@ namespace UnityEditor.Scripting.Python
             // have a well-reasoned order.
             var sitePackages = new List<string>();
 
-            // 1. Our package's Python/site-packages directory. This needs to be first.
+            // 1. Our package's Python~/site-packages directory. This needs to be first.
             {
-                string packageSitePackage = Path.GetFullPath("Packages/com.unity.scripting.python/Python/site-packages");
+                string packageSitePackage = Path.GetFullPath("Packages/com.unity.scripting.python/Python~/site-packages");
                 packageSitePackage = packageSitePackage.Replace("\\", "/");
                 sitePackages.Add(packageSitePackage);
             }

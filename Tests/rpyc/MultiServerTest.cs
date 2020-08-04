@@ -19,7 +19,7 @@ namespace Tests
             // Start our own server.
             // Then start another server process. It should exit immediately with an error.
             PythonRunner.StartServer();
-            var server_path = "Packages/com.unity.scripting.python/Python/site-packages/unity_python/server/server.py";
+            var server_path = "Packages/com.unity.scripting.python/Python~/site-packages/unity_python/server/server.py";
             dynamic p = PythonRunner.SpawnClient(server_path);
 
             // Wait for 10 seconds for the server to notice it can't run.

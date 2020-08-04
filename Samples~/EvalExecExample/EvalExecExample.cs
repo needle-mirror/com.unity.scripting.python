@@ -50,7 +50,7 @@ public class EvalExecExample
     public static void SpawnClient()
     {
         // The client here spawned could also be launched from the command line.
-        PythonRunner.SpawnClient("Packages/com.unity.scripting.python/Python/site-packages/unity_python/client/evalexec_client.py",
+        PythonRunner.SpawnClient("Packages/com.unity.scripting.python/Python~/site-packages/unity_python/client/evalexec_client.py",
                 wantLogging: true);
     }
 }
