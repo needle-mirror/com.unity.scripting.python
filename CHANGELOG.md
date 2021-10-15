@@ -2,7 +2,12 @@
 
 RELEASE NOTES
 
-## [4.0.0-exp.5] - 2020-03-26
+## [4.0.0-pre.1] - 2021-10-15
+* updated installation instructions with separate macOS and Windows sections
+* fixed tests failing due to new pip version
+* fixed tests failing due to package lifecycle v2
+
+## [4.0.0-exp.5] - 2021-03-26
 
 This is the first public release of Python for Unity since the 2.0.1-preview.2 release.
 
@@ -16,7 +21,7 @@ MAJOR CHANGES from 2.0.1-preview.2:
 * Limited support for a virtual environment workflow via the `ProjectSettings/requirements.txt` file.
 * Many bug fixes.
 
-## [4.0.0-exp.4] - 2020-02-26
+## [4.0.0-exp.4] - 2021-02-26
 
 This is a pre-alpha version for internal testing.
 

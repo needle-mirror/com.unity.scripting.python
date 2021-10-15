@@ -1,21 +1,25 @@
-# Installation Requirements
+# System Requirements
 
-* Windows 10
+* Windows 10+ or macOS High Sierra 10.13+, 64-bit versions only
 
-* [Unity 2020.1](https://unity3d.com/get-unity/download). We recommend installing the latest version of Unity 2020 via the Unity Hub; 2020.1 is the minimum.
+* [Unity 2021.2](https://unity3d.com/get-unity/download). We recommend installing the latest version of Unity 2021.2 via the Unity Hub; 2020.2 is the minimum.
 
 * Optional: To run the PySide2 example, you will need the [PySide2](https://wiki.qt.io/Qt_for_Python) package (see below).
 
-## Windows
+## Installation
 
-Install Unity Hub and Unity 2020 in their default locations. Then proceed to install the Python for Unity package.
-Open Unity's [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window and look for the package `Python for Unity`.
-Install it. Once the installation process is over, a message displaying "Python sucessfully installed" should appear in the Console.
- 
+You can install this package through the Package Manager or via your project’s manifest.
 
-To get PySide2 after installing Python for Unity, start a PowerShell session from the [Settings](settings.md) and run:
+In Unity 2022.1 and above:
+* Open the [Package Manager Project Settings](https://docs.unity3d.com/Manual/class-PackageManager.html).
+* Enable the **Enable Pre-release packages** checkbox.
+* Open the [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
+* Click the **Packages** dropdown and select **Unity Registry**.
+* Find and select `Python for Unity` in the list of packages, and click **Install**. 
 
-```shell
-pip install PySide2
-```
+In Unity 2021.2:
+* Open the [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
+* Click the **+** dropdown and select **Add package by name**.
+* Enter `com.unity.scripting.python`, and click **Add**. 
 
+Once the installation process is complete, "Python successfully installed" will appear in the Console.

@@ -66,12 +66,12 @@ namespace UnityEditor.Scripting.Python
         const string dynLibExt = "dylib";
 #endif
         static readonly string BinariesPackageName = $"com.unity.scripting.python.{Platform}";
-        const string BinariesPackageVersion = "1.0.0-exp.3";
+        const string BinariesPackageVersion = "1.0.0-pre.1";
         const string VersionFile = "Library/PythonInstall/version";
 
         internal enum BinariesPackageReleaseType
         {
-            kPreview, kExperimental, kPreRelease, kRelease
+            kExperimental, kPreRelease, kRelease
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace UnityEditor.Scripting.Python
             EnsureInitialized();
             using (Py.GIL())
             {
-                dynamic redirect_stdout = PythonEngine.ImportModule("redirecting_stdout");
+                dynamic redirect_stdout = PythonEngine.ImportModule("unity_python.common.redirecting_stdout");
                 redirect_stdout.redirect_stdout();
                 PythonEngine.AddShutdownHandler(UndoRedirectStdout);
             }
@@ -265,7 +265,7 @@ namespace UnityEditor.Scripting.Python
             {
                 try
                 {
-                    dynamic redirect_stdout = PythonEngine.ImportModule("redirecting_stdout");
+                    dynamic redirect_stdout = PythonEngine.ImportModule("unity_python.common.redirecting_stdout");
                     redirect_stdout.undo_redirection();
                 }
                 catch (PythonException e)
@@ -476,10 +476,6 @@ namespace UnityEditor.Scripting.Python
                 if (type == "exp")
                 {
                     releaseType = BinariesPackageReleaseType.kExperimental;
-                }
-                else if(type == "preview")
-                {
-                    releaseType = BinariesPackageReleaseType.kPreview;
                 }
                 else if(type == "pre")
                 {

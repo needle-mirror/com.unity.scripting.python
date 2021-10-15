@@ -122,7 +122,7 @@ namespace UnityEditor.Scripting.Python.Tests
         [Test]
         public void TestPackageVersionStrings()
         {
-            Assert.That(PythonSettings.Version, Does.Match(@"(\d.\d.\d(\-(preview|exp)\.\d{1,3}))"));
+            Assert.That(PythonSettings.Version, Does.Match(@"(\d.\d.\d(\-(pre|exp)\.\d{1,3}))"));
             Assert.That(PythonSettings.PythonNetVersion, Does.Match(@"[\d.\d.\d.\d]"));
         }
 
@@ -243,7 +243,7 @@ namespace UnityEditor.Scripting.Python.Tests
                 "a.0.0",
                 "1.b.0",
                 "3.4.d-pre.1",
-                "1.9.0-prev.2",
+                "1.9.0-preview.2",
                 "1.2.0-pre.f"
             };
             foreach (var version in invalidVersions)
@@ -251,12 +251,13 @@ namespace UnityEditor.Scripting.Python.Tests
                 Assert.Throws<PythonInstallException>(() =>
                 {
                     PythonRunner.ConvertVersionToTuple(version);
+                    Debug.LogError($"Unexpected valid version '{version}'");
                 });
             }
 
-            var previewVersion = "1.1.1-preview.4";
-            var result = PythonRunner.ConvertVersionToTuple(previewVersion);
-            Assert.That(result, Is.EqualTo((1, 1, 1, PythonRunner.BinariesPackageReleaseType.kPreview, 4)));
+            var prereleaseVersion = "1.1.1-pre.4";
+            var result = PythonRunner.ConvertVersionToTuple(prereleaseVersion);
+            Assert.That(result, Is.EqualTo((1, 1, 1, PythonRunner.BinariesPackageReleaseType.kPreRelease, 4)));
 
             var expVersion = "2.4.6-exp.2";
             result = PythonRunner.ConvertVersionToTuple(expVersion);

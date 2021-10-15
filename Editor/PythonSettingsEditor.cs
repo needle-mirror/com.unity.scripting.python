@@ -53,7 +53,7 @@ namespace UnityEditor.Scripting.Python
                         _ = reader.ReadLine();
                         _ = reader.ReadLine();
                         // We want  to extract the version out of this string:
-                        // `"version" : "3.0.0-preview.1",`
+                        // `"version" : "3.0.0-pre.1",`
                         var regex = new Regex("\"version\"\\s*:\\s*\"([^\"]+)\",");
                         // and it's the 2nd captured group
                         var match = regex.Match(reader.ReadLine());

@@ -117,7 +117,7 @@ namespace UnityEditor.Scripting.Python.Tests
             yield return WaitForProcessEnd(proc, 20);
 
             // Need to update pip, piptools requires pip._internal.commands.create_command, which is not available witout updating
-            argsStr = new PyString(" -m pip install pip -U");
+            argsStr = new PyString(" -m pip install pip==21.2.4 -U");
             args = shlex.split(argsStr);
             dynamic envOverride = new PyDict();
             envOverride["PYTHONPATH"] = new PyString(pythonPath);
@@ -166,7 +166,7 @@ namespace UnityEditor.Scripting.Python.Tests
                     wantLogging: false);
             yield return WaitForProcessEnd(proc, 20);
 
-            argsStr = new PyString(" -m pip install pip -U");
+            argsStr = new PyString(" -m pip install pip==21.2.4 -U");
             args = shlex.split(argsStr);
             dynamic envOverride = new PyDict();
             envOverride["PYTHONPATH"] = new PyString(pythonPath);
@@ -231,7 +231,7 @@ namespace UnityEditor.Scripting.Python.Tests
             var lines = newLineRegex.Split(output);
             Assert.That(lines.Length, Is.EqualTo(9)); // 8 package lines + 1 empty line
 
-            argsStr = new PyString(" -m pip install pip -U");
+            argsStr = new PyString(" -m pip install pip==21.2.4 -U");
             args = shlex.split(argsStr);
 
             dynamic envOverride = new PyDict();

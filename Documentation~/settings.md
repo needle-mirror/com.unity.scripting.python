@@ -48,20 +48,57 @@ Unity will only apply the `requirements.txt` when you open a project.
 If you change the `requirements.txt` while you have a project open (for example, if you update your project from revision control while Unity is running),
 the Python packages will not update. To apply the new requirements you will need to restart Unity.
 
-### Installing packages on the command-line (Windows only)
+### Installing packages on the command-line (Windows)
 
 Click on the `Spawn shell in environment` button which is available in the
-settings panel on Windows. A PowerShell window will pop up.
+settings panel on Windows. A PowerShell window will open, with its PATH environment
+variable pointing to the Unity Python installation. 
 
-Use `pip` to manage your local packages:
+Use `pip3` to manage your local packages:
 
-![Python for Unity Install Pip Packages](images/project-settings-pip-examples.png)
+```
+PS D:\UnityProjects\Python 3> pip3 install numpy
+Collecting numpy
+  Downloading numpy-1.21.2-cp37-cp37m-macosx_10_9_x86_64.whl (16.9 MB)
+     |████████████████████████████████| 16.9 MB 3.5 MB/s
+Installing collected packages: numpy
+Successfully installed numpy-1.21.2
+```
 
 After making changes to the Python packages, make sure to update the
 `ProjectSettings/requirements.txt` file. Otherwise your changes will be
 reverted next time you reopen the project. You can use this command for example:
 ```
-pip freeze > ProjectSettings/requirements.txt
+pip3 freeze > ProjectSettings/requirements.txt
+```
+
+### Installing packages on the command-line (macOS)
+
+In the Project window, right-click on Assets and select Reveal in Finder.
+Open a macOS Terminal window and type `cd `. Now drag the `Library` folder from Finder
+to the Terminal window and press **Enter**. Next, type `cd PythonInstall/bin` 
+and press **Enter**. Your Terminal window should look something like this:
+```
+$ cd /Users/myusername/My\ Unity\ Project/Library
+$ cd PythonInstall/bin
+```
+
+Use `./pip3` to manage your local packages:
+
+```
+$ ./pip3 install numpy
+Collecting numpy
+  Downloading numpy-1.21.2-cp37-cp37m-macosx_10_9_x86_64.whl (16.9 MB)
+     |████████████████████████████████| 16.9 MB 3.5 MB/s
+Installing collected packages: numpy
+Successfully installed numpy-1.21.2
+```
+
+After making changes to the Python packages, make sure to update the
+`ProjectSettings/requirements.txt` file. Otherwise your changes will be
+reverted next time you reopen the project. You can use this command for example:
+```
+./pip3 freeze > ../../../ProjectSettings/requirements.txt
 ```
 
 ## Limitations
