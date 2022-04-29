@@ -18,7 +18,7 @@
     "autoReferenced": false,
   "defineConstraints": [
     "UNITY_INCLUDE_TESTS",
-    "UNITY_EDITOR_WIN || UNITY_EDITOR_OSX"
+    "UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX"
   ],
     "versionDefines": [],
     "noEngineReferences": false

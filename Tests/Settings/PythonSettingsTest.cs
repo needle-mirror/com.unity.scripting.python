@@ -55,7 +55,7 @@ namespace UnityEditor.Scripting.Python.Tests
         public IEnumerator TestSettingsWindow()
         {
             // This test OnGui etc. If there's error messages there's a problem.
-            var window = SettingsService.OpenProjectSettings("Project/Python for Unity");
+            var window = SettingsService.OpenProjectSettings("Project/Python Scripting");
             yield return null;
             window.Repaint();
             yield return null;

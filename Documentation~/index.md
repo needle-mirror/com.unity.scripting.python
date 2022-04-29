@@ -1,6 +1,6 @@
-# Python for Unity
+# Python Scripting
 
-Python for Unity facilitates Unity's interaction with various media and
+Python Scripting facilitates Unity's interaction with various media and
 entertainment industry applications and ensures that you can integrate Unity
 into a broader production pipeline seamlessly. Potential benefits of using
 Python in your Unity project include:
@@ -12,7 +12,7 @@ quantity of Assets.
 - Authoring custom editor tools that could both use complex UI elements and 
 interact natively with other DCC suites.
 
-Python for Unity provides:
+Python Scripting provides:
 * A [Python Script Editor](PythonScriptEditor.md) window principally aimed at
   Technical Artists who want to run short scripts and easily create new menu
   items that run Python code.

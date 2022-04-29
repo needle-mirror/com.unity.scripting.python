@@ -15,7 +15,7 @@ In Unity 2022.1 and above:
 * Enable the **Enable Pre-release packages** checkbox.
 * Open the [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
 * Click the **Packages** dropdown and select **Unity Registry**.
-* Find and select `Python for Unity` in the list of packages, and click **Install**. 
+* Find and select `Python Scripting` in the list of packages, and click **Install**. 
 
 In Unity 2021.2:
 * Open the [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.

@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using System.IO;
 using UnityEditor.Build.Reporting;
+using UnityEditor.TestTools;
 
 namespace UnityEditor.Scripting.Python.Tests
 {
@@ -12,7 +13,7 @@ namespace UnityEditor.Scripting.Python.Tests
         private const string k_temporaryFolderName = "_safe_to_delete_build";
 
         private string BuildFolder { get { return Path.Combine(Path.GetDirectoryName(Application.dataPath), k_temporaryFolderName); } }
-        
+
         private string BuildTestScenePath { get { return $"Assets/{k_temporaryFolderName}"; } }
 
         [SetUp]
@@ -47,34 +48,31 @@ namespace UnityEditor.Scripting.Python.Tests
             }
         }
 
-        [Test]
-        public void TestBuildPlayer()
+        [Test, RequirePlatformSupport(new BuildTarget[] { BuildTarget.StandaloneWindows64 })]
+        public void TestBuildPlayer_StandaloneWindows64()
+        {
+            TestBuildPlayer(BuildTarget.StandaloneWindows64, "test.exe");
+        }
+
+        [Test, RequirePlatformSupport(new BuildTarget[] { BuildTarget.StandaloneOSX })]
+        public void TestBuildPlayer_StandaloneOSX()
+        {
+            TestBuildPlayer(BuildTarget.StandaloneOSX, "test.app");
+        }
+
+        [Test, RequirePlatformSupport(new BuildTarget[] { BuildTarget.StandaloneLinux64 })]
+        public void TestBuildPlayer_StandaloneLinux64()
+        {
+            TestBuildPlayer(BuildTarget.StandaloneLinux64, "test.x86_64");
+        }
+
+        void TestBuildPlayer(BuildTarget buildTarget, string buildName)
         {
             // create simple test scene
             var scene = SceneManagement.EditorSceneManager.NewScene(SceneManagement.NewSceneSetup.DefaultGameObjects, SceneManagement.NewSceneMode.Single);
             var scenePath = Path.Combine(BuildTestScenePath, "test.unity");
             SceneManagement.EditorSceneManager.SaveScene(scene, scenePath);
             AssetDatabase.Refresh();
-
-            BuildTarget buildTarget;
-            string buildName;
-            switch (Application.platform)
-            {
-                case RuntimePlatform.WindowsEditor:
-                    buildTarget = BuildTarget.StandaloneWindows64;
-                    buildName = "test.exe";
-                    break;
-                case RuntimePlatform.OSXEditor:
-                    buildTarget = BuildTarget.StandaloneOSX;
-                    buildName = "test.app";
-                    break;
-                case RuntimePlatform.LinuxEditor:
-                    buildTarget = BuildTarget.StandaloneLinux64;
-                    buildName = "test.x86_64";
-                    break;
-                default:
-                    throw new System.PlatformNotSupportedException($"Platform {Application.platform} is not supported.");
-            }
 
             BuildPlayerOptions options = new BuildPlayerOptions();
             options.locationPathName = Path.Combine(BuildFolder, buildName);

@@ -49,7 +49,7 @@ namespace UnityEditor.Scripting.Python.Samples
             PythonRunner.EnsureInitialized();
             using (Py.GIL())
             {
-                dynamic sys = PythonEngine.ImportModule("sys");
+                dynamic sys = Py.Import("sys");
                 if ((int)sys.path.count(dir) == 0)
                 {
                     sys.path.append(dir);
@@ -119,7 +119,7 @@ namespace UnityEditor.Scripting.Python.Samples
             // it's because you forgot to take the GIL.
             using (Py.GIL())
             {
-                dynamic module = PythonEngine.ImportModule("PySideExample");
+                dynamic module = Py.Import("PySideExample");
                 module.on_update();
             }
         }

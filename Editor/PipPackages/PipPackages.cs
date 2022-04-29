@@ -2,7 +2,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
-
+using UnityEngine;
 using Python.Runtime;
 
 [assembly:System.Runtime.CompilerServices.InternalsVisibleTo("Unity.Scripting.Python.Tests")]
@@ -28,13 +28,15 @@ namespace UnityEditor.Scripting.Python.Packages
             PythonRunner.EnsureInitialized();
             using (Py.GIL())
             {
-                dynamic spawn_process = PythonEngine.ImportModule("unity_python.common.spawn_process");
+                dynamic spawn_process = Py.Import("unity_python.common.spawn_process");
 
                 dynamic args = new PyList();
                 args.append(updatePackagesScript);
                 args.append(requirementsFile);
+                // Only take packages in our site-packages, don't pick up the ones installed on the system.
+                args.append(Application.dataPath + "/Library/PythonInstall/Lib/site-packages");
 
-                dynamic subprocess = PythonEngine.ImportModule("subprocess");
+                dynamic subprocess = Py.Import("subprocess");
                 var subprocessKwargs = new PyDict();
                 subprocessKwargs["stdout"] = subprocess.PIPE;
                 subprocessKwargs["stderr"] = subprocess.PIPE;

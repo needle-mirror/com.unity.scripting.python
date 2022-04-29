@@ -35,7 +35,7 @@ namespace UnityEditor.Scripting.Python.Tests
         PythonRunner.EnsureInitialized();
         using (Py.GIL())
         {
-            dynamic module = PythonEngine.ImportModule("unity_python.common.spawn_process");
+            dynamic module = Py.Import("unity_python.common.spawn_process");
             spawn = module.spawn_process_in_environment;
         }
     }
@@ -58,8 +58,8 @@ namespace UnityEditor.Scripting.Python.Tests
         PythonRunner.EnsureInitialized();
         using (Py.GIL())
         {
-            dynamic subprocess = PythonEngine.ImportModule("subprocess");
-            dynamic module = PythonEngine.ImportModule("unity_python.common.spawn_process");
+            dynamic subprocess = Py.Import("subprocess");
+            dynamic module = Py.Import("unity_python.common.spawn_process");
             dynamic spawn = module.spawn_process_in_environment;
 
             dynamic args = new PyList();
@@ -97,38 +97,22 @@ namespace UnityEditor.Scripting.Python.Tests
     {
         using (Py.GIL())
         {
-        dynamic shlex = PythonEngine.ImportModule("shlex");
+        dynamic shlex = Py.Import("shlex");
 
         using (var env = new PyTestVenv())
         {
-#if UNITY_EDITOR_WIN
-            string  pythonVenvInterpreter = Path.Combine(env.path, "Scripts", "python.exe");
-            // CallPipFreeze, PYTHONPATH limited to py venv path
-            string pythonPath = Path.Combine(env.path, "Lib", "site-packages");
-#else
-            string  pythonVenvInterpreter = Path.Combine(env.path, "bin", "python3");
-            string pythonPath = Path.Combine(env.path, "lib", "site-packages", "python3.7", "site-packages");
-#endif
             // Install toml 0.9.0 into the py venv
-            var argsStr = new PyString("-m pip install toml==0.9.0");
+            // FIXME: we need to use `--use-deprecated=html5lib` otherwise we get a error about non-conform
+            // html headers
+            var argsStr = new PyString("-m pip install --use-deprecated=html5lib toml==0.9.0");
             var args = shlex.split(argsStr);
-            dynamic proc = spawn(pythonVenvInterpreter, args,
+            dynamic proc = spawn(env.interpreter, args,
                     wantLogging: false);
             yield return WaitForProcessEnd(proc, 20);
 
-            // Need to update pip, piptools requires pip._internal.commands.create_command, which is not available witout updating
-            argsStr = new PyString(" -m pip install pip==21.2.4 -U");
-            args = shlex.split(argsStr);
-            dynamic envOverride = new PyDict();
-            envOverride["PYTHONPATH"] = new PyString(pythonPath);
-            dynamic proc2 = spawn(pythonVenvInterpreter, args,
-                    env_override: envOverride,
-                    wantLogging: false);
-            yield return WaitForProcessEnd(proc2, 20);
-
-            // Call UpdatePackages with a requirements.txt file containing only a requirement to toml 0.10.0
+            // Call UpdatePackages with a requirements.txt file containing only a requirement to toml 0.10.0 (and pip-tools)
             var testRequirementFile = Path.Combine(TestsPath, "test_requirements_1.txt");
-            PipPackages.UpdatePackages(testRequirementFile, pythonVenvInterpreter);
+            PipPackages.UpdatePackages(testRequirementFile, env.interpreter);
 
             // NOTE:
             // in this case, this not pip-tools diff/sync funcs that remove toml 9 for toml 10,
@@ -136,8 +120,8 @@ namespace UnityEditor.Scripting.Python.Tests
             // the current version before installing the required one
 
             // Check that the only package in the py venv is toml 0.10.0
-            var output = CallPipFreeze(pythonVenvInterpreter, pythonPath);
-            Assert.That(output, Is.EqualTo("toml==0.10.0\n"));
+            var output = CallPipFreeze(env.interpreter, env.pythonPath);
+            Assert.That(output, Does.Contain("toml==0.10.0\n"));
         }
         }
     }
@@ -147,42 +131,27 @@ namespace UnityEditor.Scripting.Python.Tests
     {
         using (Py.GIL())
         {
-        dynamic shlex = PythonEngine.ImportModule("shlex");
+        dynamic shlex = Py.Import("shlex");
 
         using (var env = new PyTestVenv())
         {
-#if UNITY_EDITOR_WIN
-            string  pythonVenvInterpreter = Path.Combine(env.path, "Scripts", "python.exe");
-            // CallPipFreeze, PYTHONPATH limited to py venv path
-            string pythonPath = Path.Combine(env.path, "Lib", "site-packages");
-#else
-            string  pythonVenvInterpreter = Path.Combine(env.path, "bin", "python3");
-            string pythonPath = Path.Combine(env.path, "lib", "site-packages", "python3.7", "site-packages");
-#endif
             // Install toml 0.10.0 into the py venv
-            var argsStr = new PyString("-m pip install toml==0.10.0");
+            // FIXME: we need to use `--use-deprecated=html5lib` otherwise we get a error about non-conform
+            // html headers
+            var argsStr = new PyString("-m pip install --use-deprecated=html5lib toml==0.10.0");
             var args = shlex.split(argsStr);
-            dynamic proc = spawn(pythonVenvInterpreter, args,
+            dynamic proc = spawn(env.interpreter, args,
                     wantLogging: false);
             yield return WaitForProcessEnd(proc, 20);
 
-            argsStr = new PyString(" -m pip install pip==21.2.4 -U");
-            args = shlex.split(argsStr);
-            dynamic envOverride = new PyDict();
-            envOverride["PYTHONPATH"] = new PyString(pythonPath);
-            dynamic proc2 = spawn(pythonVenvInterpreter, args,
-                    env_override: envOverride,
-                    wantLogging: false);
-            yield return WaitForProcessEnd(proc2, 20);
-
-            // Call UpdatePackages with a requirements.txt file containing only a requirement to toml 0.9.0
+            // Call UpdatePackages with a requirements.txt file containing only a requirement to toml 0.9.0 (and pip-tools)
             var testRequirementFile = Path.Combine(TestsPath, "test_requirements_2.txt");
-            PipPackages.UpdatePackages(testRequirementFile, pythonVenvInterpreter);
+            PipPackages.UpdatePackages(testRequirementFile, env.interpreter);
 
             // Check that the only package in the py venv is toml 0.9.0
 
-            var output = CallPipFreeze(pythonVenvInterpreter, pythonPath);
-            Assert.That(output, Is.EqualTo("toml==0.9.0\n"));
+            var output = CallPipFreeze(env.interpreter, env.pythonPath);
+            Assert.That(output, Does.Contain("toml==0.9.0\n"));
         }
         }
     }
@@ -193,29 +162,21 @@ namespace UnityEditor.Scripting.Python.Tests
     {
         using (Py.GIL())
         {
-        dynamic shlex = PythonEngine.ImportModule("shlex");
+        dynamic shlex = Py.Import("shlex");
 
         using (var env = new PyTestVenv())
         {
-#if UNITY_EDITOR_WIN
-            string  pythonVenvInterpreter = Path.Combine(env.path, "Scripts", "python.exe");
-            // CallPipFreeze, PYTHONPATH limited to py venv path
-            string pythonPath = Path.Combine(env.path, "Lib", "site-packages");
-#else
-            string  pythonVenvInterpreter = Path.Combine(env.path, "bin", "python3");
-            string pythonPath = Path.Combine(env.path, "lib", "site-packages", "python3.7", "site-packages");
-#endif
             // Install several packages:
             // numpy & vg have no dependencies
             // UnityPy depends on Brotli colorama lz4 Pillow termcolor
             var argsStr = new PyString("-m pip install numpy==1.17.5  vg==1.6.0 UnityPy==1.2.4.8");
             var args = shlex.split(argsStr);
-            dynamic proc = spawn(pythonVenvInterpreter, args,
+            dynamic proc = spawn(env.interpreter, args,
                     wantLogging: false);
             yield return WaitForProcessEnd(proc, 60);
 
             // Check installations went as expected, to ensure our test is properly set
-            string output = CallPipFreeze(pythonVenvInterpreter, pythonPath);
+            string output = CallPipFreeze(env.interpreter, env.pythonPath);
             // requested packages with specific versions
             Assert.That(output, Contains.Substring("numpy==1.17.5"));
             Assert.That(output, Contains.Substring("vg==1.6.0"));
@@ -235,8 +196,8 @@ namespace UnityEditor.Scripting.Python.Tests
             args = shlex.split(argsStr);
 
             dynamic envOverride = new PyDict();
-            envOverride["PYTHONPATH"] = new PyString(pythonPath);
-            dynamic proc2 = spawn(pythonVenvInterpreter, args,
+            envOverride["PYTHONPATH"] = new PyString(env.pythonPath);
+            dynamic proc2 = spawn(env.interpreter, args,
                     env_override: envOverride,
                     wantLogging: false);
             yield return WaitForProcessEnd(proc2, 20);
@@ -246,9 +207,9 @@ namespace UnityEditor.Scripting.Python.Tests
             // vg==1.7.0
             // Brotli==1.0.7
             var testRequirementFile = Path.Combine(TestsPath, "test_requirements_3.txt");
-            PipPackages.UpdatePackages(testRequirementFile, pythonVenvInterpreter);
+            PipPackages.UpdatePackages(testRequirementFile, env.interpreter);
 
-            var output2 = CallPipFreeze(pythonVenvInterpreter, pythonPath);
+            var output2 = CallPipFreeze(env.interpreter, env.pythonPath);
             Assert.That(output2, Contains.Substring("numpy==1.18.2"));
             Assert.That(output2, Contains.Substring("vg==1.7.0"));
             Assert.That(output2, Contains.Substring("Brotli==1.0.7"));
@@ -261,7 +222,7 @@ namespace UnityEditor.Scripting.Python.Tests
     [Test]
     public void TestIsInterestingWarning()
     {
-        string unwantedWarningMsg1 = "WARNING: The scripts coverage-3.7.exe, coverage.exe and coverage3.exe are installed in 'D:\\UnityProjects\\Python 3 - Copy\\Library\\PythonInstall\\Scripts' which is not on PATH.";
+        string unwantedWarningMsg1 = "WARNING: The scripts coverage-3.9.exe, coverage.exe and coverage3.exe are installed in 'D:\\UnityProjects\\Python 3 - Copy\\Library\\PythonInstall\\Scripts' which is not on PATH.";
         string unwantedWarningMsg2 = "Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.";
         string unwantedWarningMsg3 = "WARNING: You are using pip version 20.0.2; however, version 20.1 is available.";
         string unwantedWarningMsg4 = "You should consider upgrading via the 'D:\\UnityProjects\\Python 3 - Copy\\Library\\PythonInstall\\python.exe -m pip install --upgrade pip' command.";

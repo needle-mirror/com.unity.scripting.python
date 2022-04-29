@@ -1,21 +1,24 @@
 {
   "name": "com.unity.scripting.python",
-  "displayName": "Python for Unity",
-  "version": "4.0.0-pre.1",
+  "displayName": "Python Scripting",
+  "version": "5.0.0-pre.5",
   "unity": "2019.4",
-  "description": "An integration of Python for .NET delivered to your project through the Package Manager, Python for Unity provides your Unity project the means to import the Python Runtime Environment as a namespace and execute Python scripts from both inside the Unity editor and built applications.",
+  "description": "Python Scripting is an integration of the open-source Python for .NET project. This package provides the means to import the Python Runtime Environment as a namespace and execute Python scripts from the Unity Editor.",
   "keywords": [
     "python",
     "python.net"
   ],
   "category": "Editor",
+  "_upm": {
+    "changelog": "* Updated the binaries package to 1.2.0-pre.2, which upgrades Python to version 3.9.10\n* Added Ubuntu 18.04, 20.04 support\n* Added native macOS arm64 support\n* Updated the Python for .NET DLL to 3.0.0-a2\n\nREMOVED\n* pip-tools is now packaged as part of the binary distribution"
+  },
   "upmCi": {
-    "footprint": "7043f969919bf455fc121afa21b4a331309d3ff1"
+    "footprint": "6d7ac996056a686304bde4a8f7e95c040208cdbc"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.scripting.python.git",
     "type": "git",
-    "revision": "be3b54ae2ec89f92b53edde7f2ac92f349741192"
+    "revision": "83b139a95ebacd4217c482655b2d5ad438a54b13"
   },
   "samples": [
     {

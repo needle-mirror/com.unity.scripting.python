@@ -1,6 +1,6 @@
 # Python Script Editor
 
-The easiest way to start using Python for Unity is with the Python Script Editor:
+The easiest way to start using Python Scripting is with the Python Script Editor:
 
 ![Launching the Python Script Editor](images/python-console-how.png)
 

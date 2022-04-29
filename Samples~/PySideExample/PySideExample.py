@@ -1,5 +1,5 @@
 """
-This is an example of using the Python for Unity API to create a
+This is an example of using the Python Scripting API to create a
 PySide2 window that has a live link with Unity.
 
 This example shows:

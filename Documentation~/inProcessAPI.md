@@ -4,7 +4,7 @@ The [Python Script Editor](PythonScriptEditor.md) makes it easy to test
 Python scripts and to create a menu item to allow users to easily
 access the script.
 
-In addition you can directly call Python from your C# scripts. Python for Unity
+In addition you can directly call Python from your C# scripts. Python Scripting
 offers a high-level API and a low-level API.
 
 ## High-level API: PythonRunner.RunString
@@ -88,7 +88,7 @@ public class MyPythonScript
         PythonRunner.EnsureInitialized();
         using (Py.GIL()) {
             try {
-                dynamic sys = PythonEngine.ImportModule("sys");
+                dynamic sys = Py.Import("sys");
                 UnityEngine.Debug.Log($"python version: {sys.version}");
             } catch(PythonException e) {
                 UnityEngine.Debug.LogException(e);

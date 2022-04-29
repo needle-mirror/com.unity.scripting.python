@@ -31,13 +31,13 @@ namespace UnityEditor.Scripting.Python.Tests
             PythonInstallException xcp;
 
             xcp = new PythonInstallException();
-            Assert.That(xcp.Message, Does.StartWith("Python for Unity"));
+            Assert.That(xcp.Message, Does.StartWith("Python Scripting"));
 
             xcp = new PythonInstallException("yo");
-            Assert.That(xcp.Message, Does.StartWith("Python for Unity"));
+            Assert.That(xcp.Message, Does.StartWith("Python Scripting"));
 
             xcp = new PythonInstallException("yo", new System.NullReferenceException());
-            Assert.That(xcp.Message, Does.StartWith("Python for Unity"));
+            Assert.That(xcp.Message, Does.StartWith("Python Scripting"));
         }
 
 
@@ -138,11 +138,11 @@ namespace UnityEditor.Scripting.Python.Tests
             using (Py.GIL())
             {
                 dynamic sysmod = Py.Import("sys");
-                dynamic syspath = sysmod.path;
+                PyList syspath = sysmod.path;
                 bool found = false;
-                foreach (string path in syspath)
+                foreach (var path in syspath)
                 {
-                    if (path == Path.GetFullPath("Library/ScriptAssemblies").Replace("\\", "/"))
+                    if (path.ToString() == Path.GetFullPath("Library/ScriptAssemblies").Replace("\\", "/"))
                     {
                         found = true;
                         break;

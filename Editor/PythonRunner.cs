@@ -49,7 +49,7 @@ namespace UnityEditor.Scripting.Python
         /// <summary>
         /// The exception's string
         /// </summary>
-        public override string Message => $"Python for Unity: {base.Message}\nPlease check the Python for Unity package documentation for the install troubleshooting instructions.";
+        public override string Message => $"Python Scripting: {base.Message}\nPlease check the Python Scripting package documentation for the install troubleshooting instructions.";
     }
 
     /// <summary>
@@ -64,9 +64,13 @@ namespace UnityEditor.Scripting.Python
         const string Platform = "macos";
         const string Z7name = "7za";
         const string dynLibExt = "dylib";
+#elif UNITY_EDITOR_LINUX
+        const string Platform = "linux";
+        const string Z7name = "7za";
+        const string dynLibExt = "so";
 #endif
         static readonly string BinariesPackageName = $"com.unity.scripting.python.{Platform}";
-        const string BinariesPackageVersion = "1.0.0-pre.1";
+        const string BinariesPackageVersion = "1.2.0-pre.4";
         const string VersionFile = "Library/PythonInstall/version";
 
         internal enum BinariesPackageReleaseType
@@ -87,7 +91,7 @@ namespace UnityEditor.Scripting.Python
                 EnsureInitialized();
                 using (Py.GIL())
                 {
-                    dynamic sys = PythonEngine.ImportModule("sys");
+                    dynamic sys = Py.Import("sys");
                     return sys.version.ToString();
                 }
             }
@@ -140,7 +144,7 @@ namespace UnityEditor.Scripting.Python
             using (Py.GIL ())
             {
                 // Clean up the string.
-                dynamic inspect = PythonEngine.ImportModule("inspect");
+                dynamic inspect = Py.Import("inspect");
                 string code = inspect.cleandoc(pythonCodeToExecute);
 
                 if (string.IsNullOrEmpty(scopeName))
@@ -149,7 +153,7 @@ namespace UnityEditor.Scripting.Python
                 }
                 else
                 {
-                    using (PyScope scope = Py.CreateScope())
+                    using (PyModule scope = Py.CreateScope())
                     {
                         scope.Set("__name__", scopeName);
                         scope.Exec(code);
@@ -189,7 +193,7 @@ namespace UnityEditor.Scripting.Python
                 }
                 else
                 {
-                    using (PyScope scope = Py.CreateScope())
+                    using (PyModule scope = Py.CreateScope())
                     {
                         scope.Set("__name__", scopeName);
                         scope.Set("__file__", pythonFileToExecute);
@@ -249,7 +253,7 @@ namespace UnityEditor.Scripting.Python
             EnsureInitialized();
             using (Py.GIL())
             {
-                dynamic redirect_stdout = PythonEngine.ImportModule("unity_python.common.redirecting_stdout");
+                dynamic redirect_stdout = Py.Import("unity_python.common.redirecting_stdout");
                 redirect_stdout.redirect_stdout();
                 PythonEngine.AddShutdownHandler(UndoRedirectStdout);
             }
@@ -265,7 +269,7 @@ namespace UnityEditor.Scripting.Python
             {
                 try
                 {
-                    dynamic redirect_stdout = PythonEngine.ImportModule("unity_python.common.redirecting_stdout");
+                    dynamic redirect_stdout = Py.Import("unity_python.common.redirecting_stdout");
                     redirect_stdout.undo_redirection();
                 }
                 catch (PythonException e)
@@ -288,7 +292,7 @@ namespace UnityEditor.Scripting.Python
             }
             using(Py.GIL())
             {
-                dynamic scheduling_module = PythonEngine.ImportModule("unity_python.common.scheduling");
+                dynamic scheduling_module = Py.Import("unity_python.common.scheduling");
                 
                 try
                 {
@@ -331,10 +335,11 @@ namespace UnityEditor.Scripting.Python
 #if UNITY_EDITOR_WIN
             [DllImport("kernel32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
             internal static extern IntPtr GetModuleHandle(string lpMpduleName);
-            internal static string pythonLibraryName = "python37";
+            internal static string pythonLibraryName = "python39";
             internal static string pythonLibPath = $"{PythonSettings.kDefaultPythonDirectory}";
+            internal static string libExtension = ".dll";
 
-#elif UNITY_EDITOR_OSX
+#elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
             [DllImport("libdl." + dynLibExt)]
             static internal extern IntPtr dlopen(string filename, int flags);
 
@@ -343,9 +348,9 @@ namespace UnityEditor.Scripting.Python
 
             internal const int RTLD_NOW = 2;
             internal const int RTLD_NOLOAD = 4;
-            internal static string pythonLibraryName = $"libpython3.7m";
+            internal static string pythonLibraryName = $"libpython3.9";
             internal static string pythonLibPath = $"{PythonSettings.kDefaultPythonDirectory}/lib";
-
+            internal static string libExtension = $".{dynLibExt}";
 #endif
         }
             /// <summary>
@@ -356,7 +361,7 @@ namespace UnityEditor.Scripting.Python
         {
 #if UNITY_EDITOR_WIN
             return NativeMethods.GetModuleHandle($"{NativeMethods.pythonLibraryName}.dll") != IntPtr.Zero;
-#elif UNITY_EDITOR_OSX
+#elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
             string pythonDyLibPath = $"{NativeMethods.pythonLibPath}/{NativeMethods.pythonLibraryName}.{dynLibExt}";
             IntPtr pythonDyLibHandle = NativeMethods.dlopen(pythonDyLibPath, NativeMethods.RTLD_NOW | NativeMethods.RTLD_NOLOAD);
             if (pythonDyLibHandle != IntPtr.Zero) {
@@ -388,8 +393,8 @@ namespace UnityEditor.Scripting.Python
         {
 #if UNITY_EDITOR_WIN
             var site_path = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory + "/Lib/site.py");
-#elif UNITY_EDITOR_OSX
-            var site_path = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory + "/lib/python3.7/site.py");
+#elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
+            var site_path = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory + "/lib/python3.9/site.py");
 #endif
             return File.Exists(site_path);
         }
@@ -409,16 +414,11 @@ namespace UnityEditor.Scripting.Python
             // problematic. This can be changed at runtime by a script.
             System.Environment.SetEnvironmentVariable("PYTHONDONTWRITEBYTECODE", "1");
 
-            // First of all, load the Library in memory because we are accessing
-            // the interpreter internals before we initialize.
-            string libname = NativeMethods.pythonLibraryName;
-            if (libname.StartsWith("lib"))
-            {
-                // the library loader doesn't want the prefixing 'lib'
-                libname = libname.Remove(0, 3);
-            }
-            // This method's directory argument requires the trailing '/'
-            PythonEngine.InitializeLibrary(libname, NativeMethods.pythonLibPath+"/");
+            // We act like a virtual environment; this means we exclude the USER_SITE.
+            System.Environment.SetEnvironmentVariable("PYTHONNOUSERSITE", "1");
+
+            // Pythonnet requires the library to be set *before* the initialization.
+            Runtime.PythonDLL = NativeMethods.pythonLibPath +"/"+ NativeMethods.pythonLibraryName + NativeMethods.libExtension;
 
             // Let Python know where to find its site.py
             PythonEngine.PythonHome = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory);
@@ -537,7 +537,7 @@ namespace UnityEditor.Scripting.Python
 
         /// <summary>
         /// Check if we can proceed with an install or upgrade of Python.
-        /// In case of an upgrade, a Log is displayed if the Python library (python37.dll)
+        /// In case of an upgrade, a Log is displayed if the Python library (python39.dll)
         /// is loaded.
         /// </summary>
         /// <returns>True if it is possible to continue with an install or upgrade.
@@ -595,7 +595,7 @@ namespace UnityEditor.Scripting.Python
             }
             else
             {
-                Debug.Log("Upgrading the Python for Unity binaries. This may take a while.. In case of errors, please close Unity and delete 'Library/PythonInstall'");
+                Debug.Log("Upgrading the Python Scripting binaries. This may take a while.. In case of errors, please close Unity and delete 'Library/PythonInstall'");
             }
 
             // Get it from the server if it's not present locally/in the manifest
@@ -615,7 +615,7 @@ namespace UnityEditor.Scripting.Python
 
             // Create a process and extract the binaries
             var proc = new System.Diagnostics.Process();
-#if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_LINUX
             proc.StartInfo.FileName = $"{Path.GetDirectoryName(EditorApplication.applicationPath)}/Data/Tools/{Z7name}";
 #elif UNITY_EDITOR_OSX
             proc.StartInfo.FileName = $"{Path.GetDirectoryName(EditorApplication.applicationPath)}/Unity.app/Contents/Tools/{Z7name}";
@@ -658,7 +658,7 @@ namespace UnityEditor.Scripting.Python
 
             if (VerifyPythonInstalled())
             {
-                Debug.Log("Python sucessfully installed");
+                Debug.Log("Python installed successfully");
             }
             else
             {
@@ -677,7 +677,7 @@ namespace UnityEditor.Scripting.Python
             InstallAndLoadPython();
 
             // Initialize the engine if it hasn't been initialized yet.
-            PythonEngine.Initialize(mode: ShutdownMode.Reload);
+            PythonEngine.Initialize();
 
             ///////////////////////
             // Add the packages we use to the sys.path, and put them at the head.
@@ -692,12 +692,12 @@ namespace UnityEditor.Scripting.Python
                     dynamic coverage = null;
                     try
                     {
-                         coverage = PythonEngine.ImportModule("coverage");
+                         coverage = Py.Import("coverage");
                     }
                     catch (PythonException e)
                     {
                         // Throw a more understandable exception if we fail.
-                        if (e.PythonTypeName == "ModuleNotFoundError" || e.PythonTypeName == "ImportError")
+                        if (e.Type.Name == "ModuleNotFoundError" || e.Type.Name == "ImportError")
                         {
                             throw new PythonInstallException(
                                 $"Environment variable for code coverage is defined but no coverage package can be found. \n{e.Message}"
@@ -716,9 +716,9 @@ namespace UnityEditor.Scripting.Python
                 // TODO: remove duplicates.
 
                 // Get the builtin module, which is 'builtins' on Python3 and __builtin__ on Python2
-                dynamic builtins = PythonEngine.ImportModule("builtins");
+                dynamic builtins = Py.Import("builtins");
                 // prepend to sys.path
-                dynamic sys = PythonEngine.ImportModule("sys");
+                dynamic sys = Py.Import("sys");
                 dynamic syspath = sys.GetAttr("path");
                 dynamic sitePackages = GetExtraSitePackages();
                 dynamic pySitePackages = builtins.list();
@@ -731,7 +731,7 @@ namespace UnityEditor.Scripting.Python
 
                 // Log what we did. TODO: just to the editor log, not the console.
                 var sysPath = sys.GetAttr("path").ToString();
-                Console.Write($"Python for Unity initialized:\n  version = {PythonEngine.Version}\n  sys.path = {sysPath}\n");
+                Console.Write($"Python Scripting initialized:\n  version = {PythonEngine.Version}\n  sys.path = {sysPath}\n");
             }
 
             // Now set up some other features
@@ -789,7 +789,7 @@ namespace UnityEditor.Scripting.Python
 #if UNITY_EDITOR_WIN
         /// <summary>
         /// Spawns a Windows Powershell with the PATH set up to find the
-        /// Python for Unity's installed Python interpreter.
+        /// Python Scripting's installed Python interpreter.
         /// </summary>
         public static void SpawnShell()
         {

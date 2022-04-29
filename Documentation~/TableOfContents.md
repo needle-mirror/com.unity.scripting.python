@@ -1,4 +1,4 @@
-* [Python for Unity](index)
+* [Python Scripting](index)
 * [Installation](installation)
 * [Using Python in Unity](PythonScriptEditor)
     * [Python Settings](settings)

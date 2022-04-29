@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 namespace UnityEditor.Scripting.Python
 {
     /// <summary>
-    /// Settings for the Python for Unity package.
+    /// Settings for the Python Scripting package.
     /// </summary>
     public sealed class PythonSettings : ScriptableObject
     {
@@ -27,7 +27,7 @@ namespace UnityEditor.Scripting.Python
         internal const string kDefaultPythonDirectory = "Library/PythonInstall";
 #if UNITY_EDITOR_WIN
         internal const string kDefaultPython = kDefaultPythonDirectory + "/python.exe";
-#elif UNITY_EDITOR_OSX
+#elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
         internal const string kDefaultPython = kDefaultPythonDirectory +  "/bin/python3";
 #endif
 
@@ -72,7 +72,7 @@ namespace UnityEditor.Scripting.Python
         /// <summary>
         /// Version number of our custom
         /// <a href="https://github.com/Unity-Technologies/pythonnet">python.NET</a>
-        /// forked library installed with Python for Unity.
+        /// forked library installed with Python Scripting.
         /// </summary>
         public static string PythonNetVersion
         {
@@ -233,11 +233,11 @@ namespace UnityEditor.Scripting.Python
 
             EditorGUILayout.LabelField(
                     new GUIContent("Python Version: " + ShortPythonVersion(PythonRunner.PythonVersion),
-                        "Python for Unity is running Python version " + PythonRunner.PythonVersion));
+                        "Python Scripting is running Python version " + PythonRunner.PythonVersion));
 
             EditorGUILayout.LabelField(
                     new GUIContent("Python for .NET Version: " + PythonSettings.PythonNetVersion,
-                        "Python for Unity uses Python for .NET version " + PythonSettings.PythonNetVersion));
+                        "Python Scripting is using Python for .NET version " + PythonSettings.PythonNetVersion));
 
             EditorGUILayout.Separator();
 
@@ -272,7 +272,7 @@ namespace UnityEditor.Scripting.Python
         [SettingsProvider]
         static SettingsProvider CreatePythonSettingsProvider()
         {
-            return new AssetSettingsProvider("Project/Python for Unity", () => PythonSettings.Instance);
+            return new AssetSettingsProvider("Project/Python Scripting", () => PythonSettings.Instance);
         }
     }
 }

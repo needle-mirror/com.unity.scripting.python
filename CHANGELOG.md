@@ -1,6 +1,15 @@
-# Changes in Python for Unity
+# Changes in Python Scripting
 
 RELEASE NOTES
+
+## [5.0.0-pre.5] - 2022-04-29
+* Updated the binaries package to 1.2.0-pre.2, which upgrades Python to version 3.9.10
+* Added Ubuntu 18.04, 20.04 support
+* Added native macOS arm64 support
+* Updated the Python for .NET DLL to 3.0.0-a2
+
+REMOVED
+* pip-tools is now packaged as part of the binary distribution
 
 ## [4.0.0-pre.1] - 2021-10-15
 * updated installation instructions with separate macOS and Windows sections
@@ -9,7 +18,7 @@ RELEASE NOTES
 
 ## [4.0.0-exp.5] - 2021-03-26
 
-This is the first public release of Python for Unity since the 2.0.1-preview.2 release.
+This is the first public release of Python Scripting since the 2.0.1-preview.2 release.
 
 It incorporates a large number of changes you can see below for intermediate versions released in limited alpha distribution. In summary from the last public version:
 
@@ -43,7 +52,7 @@ CHANGES
 * The pip requirements are now in `ProjectSettings/requirements.txt` instead of `Assets/pip.requirements` or a custom path.
     * Requirements can no longer be created/modified from Unity editor (text file must be edited manually).
     * Requirements are applied when first starting Unity. If they are modified during a Unity session, Unity must be restarted to apply them.
-    * Removed UI related to pip requirements from Python for Unity settings in Edit > Project Settings...
+    * Removed UI related to pip requirements from Python Scripting settings in Edit > Project Settings...
     * Can no longer change path to requirements file.
 
 
@@ -105,7 +114,7 @@ REMOVED
 NEW FEATURES
 * Python upgraded to Python 3.7.6
 * A Python install is no longer required to use this pacakge. A local python install is done for each project.
-* Multiple instances of Unity using Python For Unity can now run at the same time.
+* Multiple instances of Unity using Python Scripting can now run at the same time.
 * Added support for undo and redo in the Python Console.
 * Added Pip packages support. A Pip requirements file is generated when the scene is saved. Packages are restored when the Library is regenerated or the file is modified.
 * Added a button in the Python Settings window to spawn a system shell using the same environment as the spawned Python clients.
@@ -139,7 +148,7 @@ FIXES
 
 ## [2.0.0-preview.6] - 2020-01-08
 
-This is the first public release of Python for Unity.
+This is the first public release of Python Scripting.
 
 ## [2.0.0-preview] - 2019-07-17
 

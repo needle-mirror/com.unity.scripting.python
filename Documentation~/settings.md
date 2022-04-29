@@ -1,16 +1,16 @@
-# Python for Unity Settings
+# Python Scripting Settings
 
-You can find preferences for Python for Unity in the Project Settings under the
+You can find preferences for Python Scripting in the Project Settings under the
 Edit menu.
 
-![Python for Unity Settings](images/project-settings.png)
+![Python Scripting Settings](images/project-settings.png)
 
 The top of the window is useful information when looking for help to explain
 exactly which version of the various components you are using.
 
 ## Component Versions
 
-Python for Unity bundles with it a copy of the CPython implementation for Python
+Python Scripting bundles with it a copy of the CPython implementation for Python
 along with a custom build of Python for .NET. For information purposes the
 Settings panel verifies which version of each is in fact installed. They cannot
 be changed.
@@ -20,7 +20,7 @@ be changed.
 You can add site-packages that will be added to the `sys.path` to find
 additional Python modules. Changes are only applied after you restart Unity.
 
-![Python for Unity Site Packages Settings](images/project-settings-site-packages.png)
+![Python Scripting Site Packages Settings](images/project-settings-site-packages.png)
 
 <a name="pipPackages"></a>
 
@@ -40,7 +40,7 @@ versions of the same packages. Simply opening a project with a `requirements.txt
 will automatically install any missing packages, and uninstall unused ones.
 
 Place the requirements file in `ProjectSettings/requirements.txt` in your Unity project
-for the Python for Unity package to find it.
+for the Python Scripting package to find it.
 
 For details on creating a requirements file and its uses, please refer to the [pip documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files).
 
