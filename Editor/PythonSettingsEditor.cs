@@ -33,6 +33,12 @@ namespace UnityEditor.Scripting.Python
 
         internal const string kPipRequirementsFile = "ProjectSettings/requirements.txt";
 
+#if UNITY_EDITOR_WIN
+        internal const string kSitePackagesRelativePath = kDefaultPythonDirectory + "/Lib/site-packages";
+#else
+        internal const string kSitePackagesRelativePath = kDefaultPythonDirectory + "/lib/python3.9/site-packages";
+#endif
+
         /// <summary>
         /// Returns the release version.
         ///

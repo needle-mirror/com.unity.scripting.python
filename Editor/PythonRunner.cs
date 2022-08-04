@@ -70,7 +70,7 @@ namespace UnityEditor.Scripting.Python
         const string dynLibExt = "so";
 #endif
         static readonly string BinariesPackageName = $"com.unity.scripting.python.{Platform}";
-        const string BinariesPackageVersion = "1.2.0-pre.4";
+        const string BinariesPackageVersion = "1.2.0";
         const string VersionFile = "Library/PythonInstall/version";
 
         internal enum BinariesPackageReleaseType
@@ -678,6 +678,11 @@ namespace UnityEditor.Scripting.Python
 
             // Initialize the engine if it hasn't been initialized yet.
             PythonEngine.Initialize();
+
+            // Set-up proper teardown of the python runtime. 
+            // Remove then add to prevent duplication of event.
+            EditorApplication.quitting -= PythonEngine.Shutdown;
+            EditorApplication.quitting += PythonEngine.Shutdown;
 
             ///////////////////////
             // Add the packages we use to the sys.path, and put them at the head.

@@ -32,7 +32,10 @@ inside the `Library/PythonInstall/Lib/site-packages` folder of the project.
 ### Installing packages with a requirements file
 
 You can store your required Python packages with their versions in a `requirements.txt`
-file.
+file. To accomodate multiple Unity packages requiring different pip packages, this 
+requirements file is made to be used with `pip-tools`' [`compile`](https://github.com/jazzband/pip-tools#example-usage-for-pip-compile) utility.
+The same required package may appear more than once, as long both requirements 
+allow the same version ranges. Example :`pyside2==5.15.1` and `pyside2>=5.15`.
 
 If you want to share your Unity project with someone else or you are working in a
 team, sharing the `requirements.txt` file will ensure everyone is using the same
@@ -42,64 +45,11 @@ will automatically install any missing packages, and uninstall unused ones.
 Place the requirements file in `ProjectSettings/requirements.txt` in your Unity project
 for the Python Scripting package to find it.
 
-For details on creating a requirements file and its uses, please refer to the [pip documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files).
+For details on creating a requirements file and its uses, please refer to the [pip documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files) and [`pip-tools`' documentation](https://pip-tools.readthedocs.io/en/stable/)
 
 Unity will only apply the `requirements.txt` when you open a project.
 If you change the `requirements.txt` while you have a project open (for example, if you update your project from revision control while Unity is running),
 the Python packages will not update. To apply the new requirements you will need to restart Unity.
-
-### Installing packages on the command-line (Windows)
-
-Click on the `Spawn shell in environment` button which is available in the
-settings panel on Windows. A PowerShell window will open, with its PATH environment
-variable pointing to the Unity Python installation. 
-
-Use `pip3` to manage your local packages:
-
-```
-PS D:\UnityProjects\Python 3> pip3 install numpy
-Collecting numpy
-  Downloading numpy-1.21.2-cp37-cp37m-macosx_10_9_x86_64.whl (16.9 MB)
-     |████████████████████████████████| 16.9 MB 3.5 MB/s
-Installing collected packages: numpy
-Successfully installed numpy-1.21.2
-```
-
-After making changes to the Python packages, make sure to update the
-`ProjectSettings/requirements.txt` file. Otherwise your changes will be
-reverted next time you reopen the project. You can use this command for example:
-```
-pip3 freeze > ProjectSettings/requirements.txt
-```
-
-### Installing packages on the command-line (macOS)
-
-In the Project window, right-click on Assets and select Reveal in Finder.
-Open a macOS Terminal window and type `cd `. Now drag the `Library` folder from Finder
-to the Terminal window and press **Enter**. Next, type `cd PythonInstall/bin` 
-and press **Enter**. Your Terminal window should look something like this:
-```
-$ cd /Users/myusername/My\ Unity\ Project/Library
-$ cd PythonInstall/bin
-```
-
-Use `./pip3` to manage your local packages:
-
-```
-$ ./pip3 install numpy
-Collecting numpy
-  Downloading numpy-1.21.2-cp37-cp37m-macosx_10_9_x86_64.whl (16.9 MB)
-     |████████████████████████████████| 16.9 MB 3.5 MB/s
-Installing collected packages: numpy
-Successfully installed numpy-1.21.2
-```
-
-After making changes to the Python packages, make sure to update the
-`ProjectSettings/requirements.txt` file. Otherwise your changes will be
-reverted next time you reopen the project. You can use this command for example:
-```
-./pip3 freeze > ../../../ProjectSettings/requirements.txt
-```
 
 ## Limitations
 

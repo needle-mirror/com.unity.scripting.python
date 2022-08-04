@@ -79,7 +79,7 @@ namespace UnityEditor.Scripting.Python
         {
             m_textFieldCode.SetValueWithoutNotify(newText);
             // make sure the cursor stays at the right position
-            var index = m_code.Length;
+            var index = m_code==null ? 0 : m_code.Length;
             m_textFieldCode.SelectRange(index, index);
             m_textFieldCode.MarkDirtyRepaint();
             m_performedUndoRedo = true;
@@ -153,6 +153,13 @@ namespace UnityEditor.Scripting.Python
             m_scrollerOutput = root.Query<Scroller>(className: "unity-scroller--vertical").First();
             m_scrollerCode = root.Query<Scroller>(className: "unity-scroller--vertical").Last();
 
+            // this field is serialized, but not the stacks. reset it explicitly.
+            m_undoGroupCount = 0;
+
+            // Handle reserialization.
+            m_textFieldCode.SetValueWithoutNotify(m_code);
+            m_textFieldOutput.value = m_outputContents;
+
             // Set up the Undo handling
             // Use the event to add to the undo stack and collapse the stack to 
             // give a feeling closer to a real text editor undo
@@ -169,11 +176,6 @@ namespace UnityEditor.Scripting.Python
             tbButtonClearCode.RegisterCallback<MouseUpEvent>(OnClearCode);
             tbButtonClearOutput.RegisterCallback<MouseUpEvent>(OnClearOutput);
             tbButtonClearAll.RegisterCallback<MouseUpEvent>(OnClearAll);
-
-
-            // Handle reserialization.
-            m_textFieldCode.value = m_code;
-            m_textFieldOutput.value = m_outputContents;
 
             // Also assign to the static variable here. On some occasions,
             // like domain reloads, the value is lost and if the window is
@@ -198,7 +200,7 @@ namespace UnityEditor.Scripting.Python
         ScrollView m_holderofOutputTextField;
 
         [SerializeField]
-        string m_code;
+        string m_code = "";
 
         // To collapse the undo stack
         static float lastEditTime = 0;
@@ -310,12 +312,21 @@ namespace UnityEditor.Scripting.Python
             if(IsShortcutPressed(k_undoShortcutBindingID, e))
             {
                 PerformUndo();
+                // This is MY event!
+                // Nobody else is allowed to have it.
+                e.PreventDefault();
+                e.StopPropagation();
                 return;
             }
 
             if(IsShortcutPressed(k_redoShortcutBindingID, e))
             {
                 PerformRedo();
+                // This is MY event!
+                // Nobody else is allowed to have it.
+                e.PreventDefault();
+                e.StopPropagation();
+                return;
             }
         }
 
@@ -407,6 +418,10 @@ namespace UnityEditor.Scripting.Python
         // Fetch and return the current code selection as a string.
         string GetSelectedCode()
         {
+#if UNITY_2022_1_OR_NEWER
+            var selectionData = m_textFieldCode.textSelection;
+            return m_textFieldCode.text.Substring(selectionData.cursorIndex, selectionData.selectIndex - selectionData.cursorIndex);
+#else
             // The current text selection of a TextField is not available through the public API in Unity 2019.1.
             // We can optain it through its TextEditor, which itself must be accessed by reflection.
             var textEditorProperty = m_textFieldCode.GetType().GetProperty("editorEngine", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -414,6 +429,7 @@ namespace UnityEditor.Scripting.Python
 
             string selectedText = textEditor.SelectedText;
             return selectedText;
+#endif
         }
 
         // Set the output field's displayed content to the associated variable.

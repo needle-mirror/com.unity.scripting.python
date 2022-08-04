@@ -2,6 +2,10 @@
 
 RELEASE NOTES
 
+## [6.0.0] - 2022-08-04
+* Fixes multiple problems with C# objects lifetime and domain reloads.
+* Updated the Python for .NET DLL to a custom patch, based on the official version 3.0.0-rc4. Commit hash: 7ffad42406e36cda9e4be7eb4ad533e45502a60d [of Unity's Pythonnet fork](https://github.com/Unity-Technologies/pythonnet/)
+
 ## [5.0.0-pre.5] - 2022-04-29
 * Updated the binaries package to 1.2.0-pre.2, which upgrades Python to version 3.9.10
 * Added Ubuntu 18.04, 20.04 support

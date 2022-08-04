@@ -122,7 +122,7 @@ namespace UnityEditor.Scripting.Python.Tests
         [Test]
         public void TestPackageVersionStrings()
         {
-            Assert.That(PythonSettings.Version, Does.Match(@"(\d.\d.\d(\-(pre|exp)\.\d{1,3}))"));
+            Assert.That(PythonSettings.Version, Does.Match(@"\d+\.\d+\.\d+(\-(pre|exp)\.\d+)?"));
             Assert.That(PythonSettings.PythonNetVersion, Does.Match(@"[\d.\d.\d.\d]"));
         }
 
