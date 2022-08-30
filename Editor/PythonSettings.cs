@@ -24,19 +24,21 @@ namespace UnityEditor.Scripting.Python
         /// <summary>
         /// Location where Python will be installed, relative to the project path.
         /// </summary>
-        internal const string kDefaultPythonDirectory = "Library/PythonInstall";
+        public const string kDefaultPythonDirectory = "Library/PythonInstall";
 #if UNITY_EDITOR_WIN
-        internal const string kDefaultPython = kDefaultPythonDirectory + "/python.exe";
+        public const string kDefaultPython = kDefaultPythonDirectory + "/python.exe";
 #elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
-        internal const string kDefaultPython = kDefaultPythonDirectory +  "/bin/python3";
+        public const string kDefaultPython = kDefaultPythonDirectory + "/bin/python" + PythonRunner.PythonMajorVersion;
 #endif
+
+        public static string kDefaultPythonFullPath => Path.GetFullPath(kDefaultPython);
 
         internal const string kPipRequirementsFile = "ProjectSettings/requirements.txt";
 
 #if UNITY_EDITOR_WIN
         internal const string kSitePackagesRelativePath = kDefaultPythonDirectory + "/Lib/site-packages";
 #else
-        internal const string kSitePackagesRelativePath = kDefaultPythonDirectory + "/lib/python3.9/site-packages";
+        internal const string kSitePackagesRelativePath = kDefaultPythonDirectory + "/lib/python" + PythonRunner.PythonMajorVersion + "." + PythonRunner.PythonMinorVersion + "/site-packages";
 #endif
 
         /// <summary>
@@ -179,7 +181,6 @@ namespace UnityEditor.Scripting.Python
         static class Styles
         {
             public static readonly GUIContent sitePackages = new GUIContent("Package Directories", "Directories where your custom scripts are stored. Added to your sys.path ahead of the system sys.path. They are added both to the in-process and out-of-process Python APIs. Relative paths are interpreted within the Unity virtual file system.");
-            public static readonly GUIContent testTimeout = new GUIContent("Rarely needed: Timeout (ms) for Python testing", "Timeout in milliseconds to use when testing if the Python interpreter has the right version. Increase this if you're seeing 'took too long to run' errors when you correctly set the out-of-process Python.");
         }
 
         internal static string ShortPythonVersion(string longPythonVersion)
@@ -218,7 +219,8 @@ namespace UnityEditor.Scripting.Python
                 settings.Save();
             }
         }
-
+        bool sitePackagesChangesPending = false;
+        bool sitePackagesChangesApplied = false;
         /// <summary>
         /// Draw the editor UI in immediate mode.
         ///
@@ -258,18 +260,32 @@ namespace UnityEditor.Scripting.Python
             EditorGUILayout.PropertyField(sitePackagesArray, Styles.sitePackages, true);
             if (EditorGUI.EndChangeCheck())
             {
+                // site packages changes pending, show the button.
+                sitePackagesChangesPending = true;
                 serializedObject.ApplyModifiedProperties();
             }
 
-            if (PythonSettings.SitePackagesChanged)
+            if (sitePackagesChangesPending)
             {
-                EditorGUILayout.HelpBox("Restart Unity for these changes to be applied.", MessageType.Warning);
+                if(GUILayout.Button("Apply site packages changes", GUILayout.Width(190)))
+                {
+                    PythonRunner.AddToSitePackages(PythonSettings.Instance.m_sitePackages);
+                    // Even when modified once, we need to show the message.
+                    sitePackagesChangesApplied = true;
+                    sitePackagesChangesPending = false;
+                }
+            }
+
+            if (PythonSettings.SitePackagesChanged && sitePackagesChangesApplied)
+            {
+                EditorGUILayout.HelpBox("The pacakges search path has been modified. A Unity restart may be required.", MessageType.Warning);
+                
             }
 
             EditorGUILayout.Separator();
 
-#if UNITY_EDITOR_WIN
-            if (GUILayout.Button("Spawn shell in environment", GUILayout.Width(170)))
+#if UNITY_EDITOR_WIN|| UNITY_EDITOR_OSX
+            if (GUILayout.Button(new GUIContent("Launch Terminal", "Launches a terminal window with Unity Python in its PATH."), GUILayout.Width(125)))
             {
                 PythonRunner.SpawnShell();
             }

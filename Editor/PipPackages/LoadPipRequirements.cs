@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.IO;
 
-namespace UnityEditor.Scripting.Python
+namespace UnityEditor.Scripting.Python.Packages
 {
     internal class LoadPipRequirements
     {
@@ -12,7 +12,6 @@ namespace UnityEditor.Scripting.Python
 
         private const string k_packagesUptoDateMessage = "Everything up-to-date";
 
-        [InitializeOnLoadMethod]
         internal static void LoadRequirements()
         {
             var startupCheck = SessionState.GetBool(k_onStartup, true);

@@ -5,7 +5,9 @@ import sys
 import threading
 import time
 
-from .settings import process_jobs_max_batch_time
+# When processing jobs, we give clients this much time (in seconds) to respond
+# within the same processing interval or wait for the next editor update.
+process_jobs_max_batch_time = 1 / 90
 
 
 # This is the job queue. Add to it via jobs.put or call_on_main_thread.

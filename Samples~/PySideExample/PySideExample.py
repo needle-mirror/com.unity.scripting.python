@@ -20,7 +20,7 @@ import os
 import sys
 import traceback
 
-from unity_python.common.scheduling import exec_on_main_thread, exec_on_main_thread_async
+from scheduling import exec_on_main_thread, exec_on_main_thread_async
 
 # This is the C# System.dll not the Python sys module.
 import System

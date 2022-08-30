@@ -1,15 +1,18 @@
 ﻿using NUnit.Framework;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Scripting.Python;
 using Python.Runtime;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using UnityEngine.TestTools;
 
-namespace UnityEditor.Scripting.Python.Tests
+namespace UnityEditor.Scripting.Python.Tests.Regular
 {
     internal class PythonRunnerTests
     {
@@ -292,7 +295,7 @@ namespace UnityEditor.Scripting.Python.Tests
             Assert.That(PythonRunner.CanInstallPythonCheck(versionStatus: 1, localPackage: true), Is.False);
         }
 
-#if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX
         [Test]
         public void TestSpawnShell()
         {
@@ -300,6 +303,52 @@ namespace UnityEditor.Scripting.Python.Tests
         }
 #endif
 
+        [Test]
+        public void TestLaunchProcess()
+        {
+            using (Process proc = PythonRunner.SpawnProcess(PythonSettings.kDefaultPythonFullPath, new List<string> {"-c", @"import sys;print('test')"}))
+            {
+                Assert.That(proc, Is.Not.Null);
+            }
+
+#if UNITY_EDITOR_WIN
+            string pip = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory) + "/Scripts/pip.bat";
+#else
+            string pip = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory) + "/bin/pip";
+#endif
+            using (Process proc = PythonRunner.SpawnProcess(pip, new List<string> {"--version"} ))
+            {
+                Assert.That(proc, Is.Not.Null);
+                proc.WaitForExit(10000);
+                Assert.That(proc.ExitCode, Is.EqualTo(0));
+            }
+        }
+
+        [Test]
+        public void TestLaunchPythonProcess()
+        {
+            using (Process proc = PythonRunner.SpawnPythonProcess(showWindow: true))
+            {
+                Assert.That(proc, Is.Not.Null);
+                // This starts the interpreter in interactive mode. Kill it so it doesn't
+                // waste a handle.
+                proc.Kill();
+            }
+
+            using (Process proc = PythonRunner.SpawnPythonProcess(new List<string> {"-c", "\"import sys;print('test')\""}))
+            {
+                Assert.That(proc, Is.Not.Null);
+                proc.WaitForExit(10000);
+                Assert.That(proc.ExitCode, Is.EqualTo(0));
+            }
+
+            using (Process proc = PythonRunner.SpawnPythonProcess(new List<string> {"-m", "pip", "--version"}))
+            {
+                Assert.That(proc, Is.Not.Null);
+                proc.WaitForExit(10000);
+                Assert.That(proc.ExitCode, Is.EqualTo(0));
+            }
+        }
     }
 }
 

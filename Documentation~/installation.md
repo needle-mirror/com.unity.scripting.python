@@ -2,7 +2,7 @@
 
 * Windows 10+ or macOS High Sierra 10.13+, 64-bit versions only
 
-* [Unity 2021.2](https://unity3d.com/get-unity/download). We recommend installing the latest version of Unity 2021.2 via the Unity Hub; 2020.2 is the minimum.
+* [Unity 2023.1](https://unity3d.com/get-unity/download). We recommend installing the latest version of Unity 2023.1 via the Unity Hub; 2020.3 is the minimum.
 
 * Optional: To run the PySide2 example, you will need the [PySide2](https://wiki.qt.io/Qt_for_Python) package (see below).
 

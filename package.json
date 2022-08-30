@@ -1,8 +1,8 @@
 {
   "name": "com.unity.scripting.python",
   "displayName": "Python Scripting",
-  "version": "6.0.0",
-  "unity": "2019.4",
+  "version": "7.0.0-pre.1",
+  "unity": "2020.3",
   "description": "Python Scripting is an integration of the open-source Python for .NET project. This package provides the means to import the Python Runtime Environment as a namespace and execute Python scripts from the Unity Editor.",
   "keywords": [
     "python",
@@ -10,12 +10,12 @@
   ],
   "category": "Editor",
   "upmCi": {
-    "footprint": "288e60cafb72e868ec7910bdbf8860f174f1f732"
+    "footprint": "9b912739ee7180a8981daf10f75d53ea6bf62fc2"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.scripting.python.git",
     "type": "git",
-    "revision": "2e4dec578ed1a67b5dd5352ed4327a550f8e38a9"
+    "revision": "19e10423eeda1a48789ef0eda2ad9e56cf0722e0"
   },
   "samples": [
     {

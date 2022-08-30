@@ -1,27 +1,30 @@
+using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using Python.Runtime;
 
 [assembly:System.Runtime.CompilerServices.InternalsVisibleTo("Unity.Scripting.Python.Tests")]
 
 namespace UnityEditor.Scripting.Python.Packages
 {
-    internal class PipPackages
+    public class PipPackages
     {
 
         private static readonly string PipPath = Path.GetFullPath("Packages/com.unity.scripting.python/Editor/PipPackages");
         private static readonly string updatePackagesScript = Path.Combine(PipPath, "update_packages.py");
         private static readonly string compiledRequirementsPath = $"{Directory.GetCurrentDirectory()}/Temp/compiled_requirements.txt";
 
-        static void ProgressBarHelper (dynamic process, string title, string info)
+        static void ProgressBarHelper (Process process, string title, string info)
         {
                 float progress = 0.25f;
                 bool reverse = false;
-                while (process.poll() == null)
+                while (!process.HasExited)
                 {
                     if (!reverse)
                     {
@@ -62,44 +65,40 @@ namespace UnityEditor.Scripting.Python.Packages
             PythonRunner.EnsureInitialized();
             using (Py.GIL())
             {
-                dynamic spawn_process = Py.Import("unity_python.common.spawn_process");
-                dynamic args = new PyList();
-                args.append("-m");
-                args.append("piptools");
-                args.append("compile");
-                args.append("-o");
-                args.append(compiledRequirementsPath);
-                args.append(requirementsFile);
+                var args = new List<string>();
+                args.Add("-m");
+                args.Add("piptools");
+                args.Add("compile");
+                args.Add("-o");
+                args.Add($"\"{compiledRequirementsPath}\"");
+                args.Add($"\"{requirementsFile}\"");
 
-                dynamic subprocess = Py.Import("subprocess");
-                var subprocessKwargs = new PyDict();
-                subprocessKwargs["stdout"] = subprocess.PIPE;
-                subprocessKwargs["stderr"] = subprocess.PIPE;
-                subprocessKwargs["universal_newlines"] = true.ToPython();
-                dynamic process = spawn_process.spawn_process_in_environment(pythonInterpreter, args, kwargs: subprocessKwargs);
-
-                ProgressBarHelper(process, "Compiling requirements", "Pip requirements compilation in progress");
-                // read stdin/out until EOF
-                dynamic res = process.communicate();
-                // get the retcode after process has finished
-                int retcode = process.poll();
-                (string output, string errors) = (res[0], res[1]);
-                // inform the user only on failure, the pip install will inform
-                // the user of the installed packages
-                if(retcode != 0)
+                using (var process = PythonRunner.SpawnPythonProcess(args, redirectOutput:true))
                 {
-                    var strbuilder = new StringBuilder();
-                    strbuilder.AppendLine("Error while compiling requirements:");
-                    foreach (var line in Regex.Split(errors, "\r\n|\n|\r"))
+
+                    ProgressBarHelper(process, "Compiling requirements", "Pip requirements compilation in progress");
+                    process.WaitForExit();
+                    // get the retcode after process has finished
+                    int retcode = process.ExitCode;
+                    string output = process.StandardOutput.ReadToEnd();
+                    string errors = process.StandardError.ReadToEnd();
+                    // inform the user only on failure, the pip install will inform
+                    // the user of the installed packages
+                    if(retcode != 0)
                     {
-                        if (!line.StartsWith("#"))
+                        var strbuilder = new StringBuilder();
+                        strbuilder.AppendLine("Error while compiling requirements:");
+                        foreach (var line in Regex.Split(errors, "\r\n|\n|\r"))
                         {
-                            strbuilder.AppendLine(line);
+                            if (!line.StartsWith("#"))
+                            {
+                                strbuilder.AppendLine(line);
+                            }
                         }
+                        Debug.LogError(strbuilder.ToString());
                     }
-                    Debug.LogError(strbuilder.ToString());
+                    return retcode;
                 }
-                return retcode;
             }
         }
 
@@ -116,46 +115,41 @@ namespace UnityEditor.Scripting.Python.Packages
             PythonRunner.EnsureInitialized();
             using (Py.GIL())
             {
-                dynamic spawn_process = Py.Import("unity_python.common.spawn_process");
-
-                dynamic args = new PyList();
-                args.append(updatePackagesScript);
-                args.append(compiledRequirementsPath);
+                var args = new List<string>();
+                args.Add($"\"{updatePackagesScript}\"");
+                args.Add($"\"{compiledRequirementsPath}\"");
                 // Only take packages in our site-packages, don't pick up the ones installed on the system.
-                args.append(Path.GetFullPath(PythonSettings.kSitePackagesRelativePath));
+                args.Add($"\"{Path.GetFullPath(PythonSettings.kSitePackagesRelativePath)}\"");
 
-                dynamic subprocess = Py.Import("subprocess");
-                var subprocessKwargs = new PyDict();
-                subprocessKwargs["stdout"] = subprocess.PIPE;
-                subprocessKwargs["stderr"] = subprocess.PIPE;
-                subprocessKwargs["universal_newlines"] = true.ToPython();
-
-                dynamic process = spawn_process.spawn_process_in_environment(pythonInterpreter, args,
-                                                              kwargs: subprocessKwargs,
-                                                              wantLogging: false);
-                ProgressBarHelper(process, "Updating required pip packages", "This could take a few minutes");
-  
-                dynamic res = process.communicate();
-                (string output, string errors) = (res[0], res[1]);
-                if (!string.IsNullOrEmpty(errors))
+                using (var process = PythonRunner.SpawnPythonProcess(args, redirectOutput:true))
                 {
-                    var pipWarningStringBuilder = new StringBuilder();
-                    // Split errors lines to filter them individually
-                    foreach (var line in Regex.Split(errors, "\r\n|\n|\r"))
+                    ProgressBarHelper(process, "Updating required pip packages", "This could take a few minutes");
+
+                    process.WaitForExit();
+                    // get the retcode after process has finished
+                    int retcode = process.ExitCode;
+                    string output = process.StandardOutput.ReadToEnd();
+                    string errors = process.StandardError.ReadToEnd();
+
+                    if (!string.IsNullOrEmpty(errors))
                     {
-                        if (IsInterestingWarning(line))
+                        var pipWarningStringBuilder = new StringBuilder();
+                        // Split errors lines to filter them individually
+                        foreach (var line in Regex.Split(errors, "\r\n|\n|\r"))
                         {
-                            pipWarningStringBuilder.AppendLine(line);
+                            if (IsInterestingWarning(line))
+                            {
+                                pipWarningStringBuilder.AppendLine(line);
+                            }
+                        }
+
+                        if (pipWarningStringBuilder.Length > 0)
+                        {
+                            Debug.LogError(pipWarningStringBuilder.ToString());
                         }
                     }
-
-                    if (pipWarningStringBuilder.Length > 0)
-                    {
-                        UnityEngine.Debug.LogError(pipWarningStringBuilder.ToString());
-                    }
-                }                    
-
-                return output;
+                    return output;
+                }
             }
         }
 
@@ -192,13 +186,147 @@ namespace UnityEditor.Scripting.Python.Packages
             const string considerAddingToPath = "Consider adding this directory to PATH";
             const string newPipVersionAvailable = @"WARNING: You are using pip version \d+\.\d+(.\d+)?;.+version \d+\.\d+(.\d+)? is available\.";
             const string considerPipUpgrade = @"You should consider upgrading via the.+-m pip install --upgrade pip' command\.";
+            const string outOfTreeDeprecation = @"DEPRECATION: A future pip version will change local packages to be built in-place without first copying to a temporary directory.";
+            const string outOfTreeDeprecation2 = @"\w*pip 21.3 will remove support for this functionality. You can find discussion regarding this at https://github.com/pypa/pip/issues/7555.\w*";
             
-            string[] patternsToFilterOut = {notOnPath, considerAddingToPath, newPipVersionAvailable, considerPipUpgrade};
+            string[] patternsToFilterOut = {notOnPath, considerAddingToPath, newPipVersionAvailable, considerPipUpgrade, outOfTreeDeprecation, outOfTreeDeprecation2};
 
             int anyMatch = patternsToFilterOut.Select(pattern => Regex.IsMatch(message, pattern))
                 .Where(match => match).Count();
 
             return anyMatch == 0;
+        }
+
+        static string GetRequirements ()
+        {
+            if (!File.Exists(PythonSettings.kPipRequirementsFile))
+            {
+                return string.Empty;
+            }
+            // TODO: prevent reading an excessively large file?
+            var contents =  File.ReadAllText(PythonSettings.kPipRequirementsFile);
+            return contents;
+        }
+
+        /// <summary>
+        /// Adds python pacakges via pip. Also adds the packages to the project's 
+        /// requirements.txt file if the same pacakge, at the same version is
+        /// not already present and installs and/or updates the packages.
+        /// If already present, no operations are performed; it is safe to
+        /// add the same package multiple times.
+        /// 
+        /// This function has a side effect of removing installed pip packages
+        /// that are not specified in the requirements.txt file or in the computed
+        /// requirements (as a dependency)
+        /// </summary>
+        /// <param name="_packages">An enumerable of the packages to add</param>
+        /// <returns>Returns true if the packages are successfully or already installed
+        /// returns false on failure. </returns>
+        public static bool AddPackages(IEnumerable<string> packages)
+        {
+            var packagesToAdd = new List<string>();
+            var curReqs = GetRequirements();
+            // https://peps.python.org/pep-0426/#name
+            // All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent
+            // As pip tools cannonicalize hyphens to underscores and all letters to lowercase, we'll do the same.
+            System.Func<string, string> pep426transform = (string input) => {
+                var output = new StringBuilder(input.Length);
+                foreach(var @char in input)
+                {
+                    if (@char == '-')
+                    {
+                        output.Append('_');
+                    }
+                    else{
+                        output.Append(char.ToLower(@char))  ;
+                    }
+                }
+                return output.ToString();
+            };
+            var curReqSet = new System.Collections.Generic.HashSet<string>(Regex.Split(curReqs, "\r\n|\n|\r").Select(pep426transform));
+
+            foreach(var package in packages)
+            {
+                var package426 = pep426transform(package);
+                if (!curReqSet.Contains(package426))
+                {
+                    packagesToAdd.Add(package); // write to file as the user inputted the name
+                    curReqSet.Add(package426); // but add the transformed name to the set.
+                }
+            }
+            if (packagesToAdd.Count() == 0)
+            {
+                // nothing to do.
+                return true;
+            }
+
+            // If there are packages to add, create a temporary requirements file.
+
+            string tempReqPath = Path.GetDirectoryName(Application.dataPath) + "/Temp/temp_requirements.txt";
+            if(File.Exists(tempReqPath))
+            {
+                try
+                {
+                    File.Delete(tempReqPath);
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+            // a FileStream has no WriteLine method, StreamWriter has
+            using (var tempReqFile = new StreamWriter(File.Create(tempReqPath)))
+            {
+                tempReqFile.Write(curReqs);
+                foreach (var package in packagesToAdd)
+                {
+                    tempReqFile.WriteLine(package);
+                }
+            }
+
+            string packagesString = string.Empty;
+            if (packages.Count() > 1)
+            {
+                packagesString = "Python packages [" + string.Join(",", packagesToAdd) + "]";
+            }
+            else 
+            {
+                packagesString = $"Python package {packagesToAdd.First()}";
+            }
+
+            var res = CompileRequirements(tempReqPath, PythonSettings.kDefaultPython);
+            if (res == 0)
+            {
+                if(File.Exists(PythonSettings.kPipRequirementsFile))
+                {
+                    // failure to move the file means failure of this
+                    File.Delete(PythonSettings.kPipRequirementsFile);
+                }
+                File.Move(tempReqPath, PythonSettings.kPipRequirementsFile);
+                var output = UpdatePackagesHelper(PythonSettings.kPipRequirementsFile, PythonSettings.kDefaultPython);
+                Debug.Log("The Project's following Python packages have been installed/updated:\n" + output);
+            }
+            else
+            {
+                
+                Debug.LogError($"Failed to install {packagesString}.");
+                return false;
+            }
+
+            Debug.Log($"Successfully installed {packagesString}.");
+            return true;
+        }
+
+        /// <summary>
+        /// Convenience function to install a single package. 
+        /// Wraps `AddPackages`.
+        /// </summary>
+        /// <param name="package">The package to add</param>
+        /// <returns>Returns true if the package is successfully or already installed
+        /// returns false on failure.</returns>
+        public static bool AddPackage(string package)
+        {
+            return AddPackages(new string[] {package});
         }
     }
 }

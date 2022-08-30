@@ -1,6 +1,20 @@
 # Changes in Python Scripting
 
 RELEASE NOTES
+## [7.0.0-pre.1] - 2022-08-30
+REMOVED
+* Removed the remnants of the Python Client API
+* Removed pycoverage initialization/config
+
+KNOWN ISSUES
+* Some Pypi libraries are Intel only on Mac
+
+CHANGES
+* Added a C# API to launch an external process with the PATH set up to point to the Python distribution.
+* Added a C# API to add pip packages
+* Added a C# API to add to site packages
+* Update minimum Unity version to 2020.3
+* Updated the binaries package to 1.3.0-pre.2, which upgrades Python to version 3.10.6
 
 ## [6.0.0] - 2022-08-04
 * Fixes multiple problems with C# objects lifetime and domain reloads.

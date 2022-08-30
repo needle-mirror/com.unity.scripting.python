@@ -4,7 +4,7 @@ using System.IO;
 using UnityEditor.Build.Reporting;
 using UnityEditor.TestTools;
 
-namespace UnityEditor.Scripting.Python.Tests
+namespace UnityEditor.Scripting.Python.Tests.Regular
 {
     public class BuildTest
     {

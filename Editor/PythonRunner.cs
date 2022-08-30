@@ -2,12 +2,14 @@ using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using Python.Runtime;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Collections;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Runtime.Serialization;
@@ -22,29 +24,29 @@ namespace UnityEditor.Scripting.Python
     public class PythonInstallException : System.Exception
     {
         /// <summary>
-        /// Parameterless constructor 
+        /// Parameterless constructor
         /// </summary>
-        public PythonInstallException() : base() { }
+        public PythonInstallException() : base() {}
 
         /// <summary>
         /// Constructor with message
         /// </summary>
         /// <param name="msg">The message of the exception</param>
-        public PythonInstallException(string msg) : base(msg) { }
+        public PythonInstallException(string msg) : base(msg) {}
 
         /// <summary>
         /// Constructor with message and the exception that triggered this exception
         /// </summary>
         /// <param name="msg">The message of the exception</param>
         /// <param name="innerException">The exception that triggered this exception</param>
-        public PythonInstallException(string msg, Exception innerException) : base(msg, innerException) { }
+        public PythonInstallException(string msg, Exception innerException) : base(msg, innerException) {}
 
         /// <summary>
         /// Required because base Exception class is serializable.
         /// </summary>
         /// <param name="info">Serializaiton info</param>
         /// <param name="ctx">Serialization context</param>
-        protected PythonInstallException(SerializationInfo info , StreamingContext ctx) : base(info, ctx) { }
+        protected PythonInstallException(SerializationInfo info , StreamingContext ctx) : base(info, ctx) {}
 
         /// <summary>
         /// The exception's string
@@ -70,8 +72,11 @@ namespace UnityEditor.Scripting.Python
         const string dynLibExt = "so";
 #endif
         static readonly string BinariesPackageName = $"com.unity.scripting.python.{Platform}";
-        const string BinariesPackageVersion = "1.2.0";
+        const string BinariesPackageVersion = "1.3.0-pre.2";
         const string VersionFile = "Library/PythonInstall/version";
+
+        internal const string PythonMajorVersion = "3";
+        internal const string PythonMinorVersion = "10";
 
         internal enum BinariesPackageReleaseType
         {
@@ -141,7 +146,7 @@ namespace UnityEditor.Scripting.Python
             }
 
             EnsureInitialized();
-            using (Py.GIL ())
+            using (Py.GIL())
             {
                 // Clean up the string.
                 dynamic inspect = Py.Import("inspect");
@@ -179,13 +184,13 @@ namespace UnityEditor.Scripting.Python
             pythonFileToExecute = Path.GetFullPath(pythonFileToExecute);
 
             // Forward slashes please
-            pythonFileToExecute = pythonFileToExecute.Replace("\\","/");
-            if (!File.Exists (pythonFileToExecute))
+            pythonFileToExecute = pythonFileToExecute.Replace("\\", "/");
+            if (!File.Exists(pythonFileToExecute))
             {
                 throw new System.IO.FileNotFoundException("No Python file found at " + pythonFileToExecute, pythonFileToExecute);
             }
 
-            using (Py.GIL ())
+            using (Py.GIL())
             {
                 if (string.IsNullOrEmpty(scopeName))
                 {
@@ -198,7 +203,7 @@ namespace UnityEditor.Scripting.Python
                         scope.Set("__name__", scopeName);
                         scope.Set("__file__", pythonFileToExecute);
                         scope.Exec(string.Format("exec(open('{0}').read())", pythonFileToExecute));
-                    }                    
+                    }
                 }
             }
         }
@@ -221,25 +226,25 @@ namespace UnityEditor.Scripting.Python
 
         /// <summary>
         /// Release the GIL by default; let other threads run.
-        /// 
+        ///
         /// Do *not* unfactor me!
-        /// 
-        /// Used to "two-step" the initialization process. No code from 
-        /// Python.net must be in scope of execution before 
+        ///
+        /// Used to "two-step" the initialization process. No code from
+        /// Python.net must be in scope of execution before
         /// PythonEngine.LoadLibrary has been called. Otherwise, some symbols
         /// may be loaded before the library is loaded in memory, causing errors
         /// and crashes.
         /// </summary>
         static void AllowThreads()
         {
-            // Let the threads flow! Since the main thread will only execute 
+            // Let the threads flow! Since the main thread will only execute
             // Python sporadically, make the main thread release the GIL. This
             // mean that every time Python-related code is executed (in the main
             // thread and everywhere else), the GIL must be held.
             s_threadState = PythonEngine.BeginAllowThreads();
 
             // And restore it on shutdown.
-            PythonEngine.AddShutdownHandler( () => {PythonEngine.EndAllowThreads(s_threadState);} );
+            PythonEngine.AddShutdownHandler(() => {PythonEngine.EndAllowThreads(s_threadState);});
         }
 
         /// <summary>
@@ -281,31 +286,6 @@ namespace UnityEditor.Scripting.Python
         }
 
         /// <summary>
-        /// OnUpdate callback called back during the Editor Idle events.
-        /// Used to process the Python jobs queue.
-        /// </summary>
-        static void OnUpdate()
-        {
-            if (!IsInitialized)
-            {
-                return;
-            }
-            using(Py.GIL())
-            {
-                dynamic scheduling_module = Py.Import("unity_python.common.scheduling");
-                
-                try
-                {
-                    scheduling_module.process_jobs();
-                }
-                catch (PythonException e)
-                {
-                    UnityEngine.Debug.LogException(e);
-                }
-            }
-        }
-
-        /// <summary>
         /// Ensures the Python API is initialized.
         ///
         /// Safe to call frequently.
@@ -335,9 +315,9 @@ namespace UnityEditor.Scripting.Python
 #if UNITY_EDITOR_WIN
             [DllImport("kernel32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
             internal static extern IntPtr GetModuleHandle(string lpMpduleName);
-            internal static string pythonLibraryName = "python39";
-            internal static string pythonLibPath = $"{PythonSettings.kDefaultPythonDirectory}";
-            internal static string libExtension = ".dll";
+            internal const string pythonLibraryName = "python" + PythonMajorVersion + PythonMinorVersion;
+            internal const string pythonLibPath = PythonSettings.kDefaultPythonDirectory;
+            internal const string libExtension = ".dll";
 
 #elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
             [DllImport("libdl." + dynLibExt)]
@@ -348,23 +328,24 @@ namespace UnityEditor.Scripting.Python
 
             internal const int RTLD_NOW = 2;
             internal const int RTLD_NOLOAD = 4;
-            internal static string pythonLibraryName = $"libpython3.9";
-            internal static string pythonLibPath = $"{PythonSettings.kDefaultPythonDirectory}/lib";
-            internal static string libExtension = $".{dynLibExt}";
+            internal const string pythonLibraryName = "libpython" + PythonMajorVersion + "." + PythonMinorVersion;
+            internal const string pythonLibPath = PythonSettings.kDefaultPythonDirectory + "/lib";
+            internal const string libExtension = "." + dynLibExt;
 #endif
         }
-            /// <summary>
-            /// Used to check if the Python library has been loaded into the memoryspace.
-            /// </summary>
-            /// <returns>True if the library has been loaded, False otherwise.</returns>
-            internal static bool IsPythonLibraryLoaded()
+        /// <summary>
+        /// Used to check if the Python library has been loaded into the memoryspace.
+        /// </summary>
+        /// <returns>True if the library has been loaded, False otherwise.</returns>
+        internal static bool IsPythonLibraryLoaded()
         {
 #if UNITY_EDITOR_WIN
             return NativeMethods.GetModuleHandle($"{NativeMethods.pythonLibraryName}.dll") != IntPtr.Zero;
 #elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
             string pythonDyLibPath = $"{NativeMethods.pythonLibPath}/{NativeMethods.pythonLibraryName}.{dynLibExt}";
             IntPtr pythonDyLibHandle = NativeMethods.dlopen(pythonDyLibPath, NativeMethods.RTLD_NOW | NativeMethods.RTLD_NOLOAD);
-            if (pythonDyLibHandle != IntPtr.Zero) {
+            if (pythonDyLibHandle != IntPtr.Zero)
+            {
                 // With RTLD_NOLOAD, the specified image is not loaded. However, a valid handle is returned if the
                 // image already exists in the process. This provides a way to query if an image is already loaded.
                 // The handle returned is ref-counted, so you eventually need a corresponding call to dlclose().
@@ -380,21 +361,21 @@ namespace UnityEditor.Scripting.Python
         /// Helper to wait on a UPM request.
         /// </summary>
         /// <param name="req">A Request to wait the completion of</param>
-        static Action<Request> WaitOnRequest = (Request req) => 
+        static Action<Request> WaitOnRequest = (Request req) =>
+        {
+            while (!req.IsCompleted)
             {
-                while(!req.IsCompleted) 
-                {
-                    // Heat the room..
-                    Thread.Sleep(1);
-                }
-            };
+                // Heat the room..
+                Thread.Sleep(1);
+            }
+        };
 
         static bool VerifyPythonInstalled()
         {
 #if UNITY_EDITOR_WIN
-            var site_path = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory + "/Lib/site.py");
+            var site_path = Path.GetFullPath($"{PythonSettings.kDefaultPythonDirectory}/Lib/site.py");
 #elif UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX
-            var site_path = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory + "/lib/python3.9/site.py");
+            var site_path = Path.GetFullPath($"{PythonSettings.kDefaultPythonDirectory}/lib/python{PythonMajorVersion}.{PythonMinorVersion}/site.py");
 #endif
             return File.Exists(site_path);
         }
@@ -418,7 +399,7 @@ namespace UnityEditor.Scripting.Python
             System.Environment.SetEnvironmentVariable("PYTHONNOUSERSITE", "1");
 
             // Pythonnet requires the library to be set *before* the initialization.
-            Runtime.PythonDLL = NativeMethods.pythonLibPath +"/"+ NativeMethods.pythonLibraryName + NativeMethods.libExtension;
+            Runtime.PythonDLL = NativeMethods.pythonLibPath + "/" + NativeMethods.pythonLibraryName + NativeMethods.libExtension;
 
             // Let Python know where to find its site.py
             PythonEngine.PythonHome = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory);
@@ -428,12 +409,12 @@ namespace UnityEditor.Scripting.Python
         {
             var ret = "0.0.0";
 
-            if (!File.Exists(VersionFile)) 
+            if (!File.Exists(VersionFile))
             {
                 return ret;
             }
 
-            using(var reader = new StreamReader(VersionFile ))
+            using (var reader = new StreamReader(VersionFile))
             {
                 ret = reader.ReadToEnd().Trim();
             }
@@ -477,7 +458,7 @@ namespace UnityEditor.Scripting.Python
                 {
                     releaseType = BinariesPackageReleaseType.kExperimental;
                 }
-                else if(type == "pre")
+                else if (type == "pre")
                 {
                     releaseType = BinariesPackageReleaseType.kPreRelease;
                 }
@@ -513,8 +494,8 @@ namespace UnityEditor.Scripting.Python
         /// <summary>
         /// Checks if the binaries packages is present locally (manually added)
         /// </summary>
-        /// <returns>A tuple of (bool, string, string) where the boolean is True if the 
-        /// binaries package is present locally, False otherwise. The string will 
+        /// <returns>A tuple of (bool, string, string) where the boolean is True if the
+        /// binaries package is present locally, False otherwise. The string will
         /// be the path of the binaries package, if the boolean is true, null otherwise.
         /// The last string will be the version of the package if the boolean is true, null otherwise</returns>
         static (bool, string, string) AreBinariesLocal()
@@ -532,12 +513,11 @@ namespace UnityEditor.Scripting.Python
                 }
             }
             return (false, null, null);
-
         }
 
         /// <summary>
         /// Check if we can proceed with an install or upgrade of Python.
-        /// In case of an upgrade, a Log is displayed if the Python library (python39.dll)
+        /// In case of an upgrade, a Log is displayed if the Python library (python310.dll)
         /// is loaded.
         /// </summary>
         /// <returns>True if it is possible to continue with an install or upgrade.
@@ -564,7 +544,7 @@ namespace UnityEditor.Scripting.Python
             else if (needsDowngrade)
             {
                 // Downgrade is unlikely to happen and this is mostly a developper warning
-                if(localPackage)
+                if (localPackage)
                 {
                     Debug.Log("The current Binaries Python package is a lower version than the installed version");
                 }
@@ -607,7 +587,7 @@ namespace UnityEditor.Scripting.Python
                 {
                     throw new PythonInstallException(req.Error.message);
                 }
-                
+
                 packageLocation = Path.GetFullPath(req.Result.resolvedPath);
                 binariesPackageVersion = req.Result.version;
             }
@@ -631,7 +611,7 @@ namespace UnityEditor.Scripting.Python
             proc.Start();
             while (!proc.HasExited)
             {
-                // Heat the room.. 
+                // Heat the room..
                 Thread.Sleep(1);
             }
             if (proc.ExitCode != 0)
@@ -679,63 +659,20 @@ namespace UnityEditor.Scripting.Python
             // Initialize the engine if it hasn't been initialized yet.
             PythonEngine.Initialize();
 
-            // Set-up proper teardown of the python runtime. 
+            // Set-up proper teardown of the python runtime.
             // Remove then add to prevent duplication of event.
             EditorApplication.quitting -= PythonEngine.Shutdown;
             EditorApplication.quitting += PythonEngine.Shutdown;
 
-            ///////////////////////
-            // Add the packages we use to the sys.path, and put them at the head.
-            // TODO: remove duplicates.
             using (Py.GIL())
             {
-                // Start coverage here for in-process coverage
-                if(!string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("COVERAGE_PROCESS_START")))
-                {
-                    // Assume that if we are trying to run coverage, the module
-                    // is in the path. Try to import it to give a better error message
-                    dynamic coverage = null;
-                    try
-                    {
-                         coverage = Py.Import("coverage");
-                    }
-                    catch (PythonException e)
-                    {
-                        // Throw a more understandable exception if we fail.
-                        if (e.Type.Name == "ModuleNotFoundError" || e.Type.Name == "ImportError")
-                        {
-                            throw new PythonInstallException(
-                                $"Environment variable for code coverage is defined but no coverage package can be found. \n{e.Message}"
-                                );
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                    }
-                    coverage.process_startup();
-                }
-
                 ///////////////////////
                 // Add the packages we use to the sys.path, and put them at the head.
-                // TODO: remove duplicates.
+                AddToSitePackages(GetExtraSitePackages());
 
-                // Get the builtin module, which is 'builtins' on Python3 and __builtin__ on Python2
-                dynamic builtins = Py.Import("builtins");
-                // prepend to sys.path
                 dynamic sys = Py.Import("sys");
-                dynamic syspath = sys.GetAttr("path");
-                dynamic sitePackages = GetExtraSitePackages();
-                dynamic pySitePackages = builtins.list();
-                foreach(var sitePackage in sitePackages)
-                {
-                    pySitePackages.append(sitePackage);
-                }
-                pySitePackages += syspath;
-                sys.SetAttr("path", pySitePackages);
-
-                // Log what we did. TODO: just to the editor log, not the console.
                 var sysPath = sys.GetAttr("path").ToString();
+                // Console.Write writes only to the Editor.log file.
                 Console.Write($"Python Scripting initialized:\n  version = {PythonEngine.Version}\n  sys.path = {sysPath}\n");
             }
 
@@ -745,6 +682,49 @@ namespace UnityEditor.Scripting.Python
             ///////////////////////
             // Finally (this should be last!) we're in a stable state -- allow Python threads to run.
             AllowThreads();
+
+            Packages.LoadPipRequirements.LoadRequirements();
+        }
+
+        /// <summary>
+        /// Appends path entries to Python's sys.path. If a given path is already
+        /// present in sys.path it will not be reappended.
+        /// </summary>
+        /// <param name="sitePackages">IEnumarable<string> of paths to add to sys.path</param>
+        public static void AddToSitePackages(IEnumerable<string> sitePackages)
+        {
+            EnsureInitialized();
+            using (Py.GIL())
+            {
+                dynamic builtins = Py.Import("builtins");
+                // prepend to sys.path
+                dynamic sys = Py.Import("sys");
+                dynamic syspath = sys.GetAttr("path");
+                dynamic pySitePackages = builtins.list();
+                dynamic currentPackages = builtins.set(syspath);
+                foreach (var sitePackage in sitePackages)
+                {
+                    if (!string.IsNullOrEmpty(sitePackage) && !currentPackages.__contains__(sitePackage))
+                    {
+                        pySitePackages.append(sitePackage);
+                    }
+                }
+                pySitePackages += syspath;
+                sys.SetAttr("path", pySitePackages);
+            }
+        }
+
+        /// <summary>
+        /// Convenience function to add a single path entry. Wraps AddToSitePackages.
+        /// </summary>
+        /// <param name="sitePackage">Single path to add to sys.path</param>
+        public static void AddToSitePackages(string sitePackage)
+        {
+            if (string.IsNullOrEmpty(sitePackage))
+            {
+                return;
+            }
+            AddToSitePackages(new string[] {sitePackage});
         }
 
         /// <summary>
@@ -756,20 +736,8 @@ namespace UnityEditor.Scripting.Python
         {
             var sitePackages = new List<string>();
 
-            // 1. Our package's Python/site-packages directory. This needs to be first.
-            {
-                string packageSitePackage = Path.GetFullPath("Packages/com.unity.scripting.python/Python~/site-packages");
-                packageSitePackage = packageSitePackage.Replace("\\", "/");
-                sitePackages.Add(packageSitePackage);
-            }
-
-            // 2 The ScriptsAssemblies folder so that users can load their own Assemblies (and the ones from the packages)
-            var scriptsAssemblies = Path.GetFullPath("Library/ScriptAssemblies");
-            scriptsAssemblies = scriptsAssemblies.Replace("\\", "/");
-            sitePackages.Add(scriptsAssemblies);
-
-            // 3. The packages from the settings.
-            foreach(var settingsPackage in PythonSettings.GetSitePackages())
+            // 1. The packages from the settings.
+            foreach (var settingsPackage in PythonSettings.GetSitePackages())
             {
                 if (!string.IsNullOrEmpty(settingsPackage))
                 {
@@ -778,7 +746,7 @@ namespace UnityEditor.Scripting.Python
                     if (settingsPackage.StartsWith("~"))
                     {
                         var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                        // Don't use Path.Combine here. If settingsPackage starts with a '/', then 
+                        // Don't use Path.Combine here. If settingsPackage starts with a '/', then
                         // settingsPackage will be returned. As per documented behaviour.
                         settingsSitePackage = homeDirectory + "/" + settingsPackage.Substring(1);
                     }
@@ -788,38 +756,191 @@ namespace UnityEditor.Scripting.Python
                 }
             }
 
+            // 2. Our package's Python/site-packages directory.
+            string packageSitePackage = Path.GetFullPath("Packages/com.unity.scripting.python/Python~/site-packages");
+            packageSitePackage = packageSitePackage.Replace("\\", "/");
+            sitePackages.Add(packageSitePackage);
+
+            // 3. The ScriptsAssemblies folder so that users can load their own Assemblies (and the ones from the packages)
+            var scriptsAssemblies = Path.GetFullPath("Library/ScriptAssemblies");
+            scriptsAssemblies = scriptsAssemblies.Replace("\\", "/");
+            sitePackages.Add(scriptsAssemblies);
+
             return sitePackages;
         }
 
-#if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX
         /// <summary>
         /// Spawns a Windows Powershell with the PATH set up to find the
         /// Python Scripting's installed Python interpreter.
         /// </summary>
         public static void SpawnShell()
         {
-            EnsureInitialized();
-            var shell = "powershell.exe";
-            using (Py.GIL())
+            Process proc = null;
+            try
             {
-                dynamic unity_py = Py.Import("unity_python.common.spawn_process");
-                dynamic builtins = Py.Import("builtins");
-                dynamic pyArgs = builtins.list(); // none
-                var path = System.Environment.GetEnvironmentVariable("PATH");
-                var pythonBinPath = Path.GetDirectoryName(Path.GetFullPath(PythonSettings.kDefaultPython)); // where the binaries/.exes are
-                var pythonScripts = pythonBinPath + "/Scripts"; // where pip and friends are
-                path = pythonBinPath + Path.PathSeparator + pythonScripts + Path.PathSeparator + path;
-                var env = new PyDict();
-                env["PATH"] = path.ToPython();
-                dynamic process = unity_py.spawn_process_in_environment(
-                        shell,
-                        pyArgs,
-                        env_override: env,
-                        show_window: true
-                        );
+                var currentDirectory = System.IO.Directory.GetCurrentDirectory();
+    #if UNITY_EDITOR_WIN
+                proc = PythonRunner.SpawnProcess("powershell.exe",
+                    new string[] {"-NoLogo", "-NoExit", "-Command", $"cd '{currentDirectory}'\""},
+                    showWindow: true,
+                    useShell: true);
+    #elif UNITY_EDITOR_OSX
+                proc = PythonRunner.SpawnProcess("osascript",
+                    null,                              // arguments are passed via stdin
+                    showWindow: false,
+                    useShell: false,
+                    redirectInput: true);
+                if (proc != null)
+                {
+                    var pythonBinPath = Path.GetDirectoryName(Path.GetFullPath(PythonSettings.kDefaultPython)); // where the python executable is
+                    var path = pythonBinPath + Path.PathSeparator + System.Environment.GetEnvironmentVariable("PATH");
+                    proc.StandardInput.WriteLine(
+                        $"tell application \"Terminal\" to do script \"export PATH='{path}:$PATH'; cd '{currentDirectory}'; clear\" & activate"
+                    );
+                    proc.StandardInput.Close();
+                }
+    #endif
+                if (proc == null || (proc.HasExited && proc.ExitCode != 0))
+                {
+                    Debug.LogError($"Unable to open terminal: {proc.StartInfo.FileName} exited with error code {proc.ExitCode}");
+                }
+            }
+            finally
+            {
+                proc?.Dispose();
             }
         }
+
 #endif
 
+        /// <summary>
+        /// Spawns a process with the PATH set up to find the Python Scripting's installed Python
+        /// interpreter (and Scripts directory on Windows). Additional environment variables can
+        /// be supplied throught the `environment` dictionary.
+        ///
+        /// The PATH environment variable may be overriden, in which case it completely overrides
+        /// the current value of Environment.GetEnvironmentVariable("PATH"). However, the path
+        /// to the python interpreter is always added as the first item in the PATH environment
+        /// variable passed to the spawned process.
+        ///
+        /// If the executed program is in the PATH environment variable passed to this function,
+        /// this includes the Python interpreter, the absolute path to the executable/script must
+        /// be given on Windows.
+        /// It is recommended to always give the full path to the executable in the programName
+        /// parameter to ensure consistency. If launching a process that is the Python interpreter,
+        /// use the SpawnPythonProcess convenience function.
+        ///
+        /// The arguments are passed as-is to the spawned process. Proper escaping is the
+        /// responsibility of the caller.
+        ///
+        /// This function is not re-entrant or thread-safe.
+        ///
+        /// As documented in System.Diagnostics.ProcessStartInfo, UseShellExecute is incompatible
+        /// with input/output redirection and will throw an exception on process launch.
+        /// </summary>
+        /// <param name="programName">The name or path to the program to launch.</param>
+        /// <param name="arguments">Arguments to be passed to the subprocess. Proper
+        /// argument quoting and escaping is the responsibility of the caller.</param>
+        /// <param name="environment">Map of additional environment variables to be
+        /// passed to the subprocess. </param>
+        /// <param name="showWindow">If true, shows a console window</param>
+        /// <param name="useShell">True to set the Process.StartInfo.UseShellExecute to true</param>
+        /// <param name="redirectOutput">True to set the Process.StartInfo.RedirectStandardOutput and Process.StartInfo.RedirectStandardError</param>
+        /// <param name="redirectInput">True to set the Process.StartInfo.RedirectStandardInput</param>
+        /// <returns>A Process object or null on startup failure. It is the caller's responsibility
+        /// to properly dispose of the Process object.
+        /// </returns>
+        public static Process SpawnProcess(string programName,
+            IEnumerable<string> arguments = null,
+            Dictionary<string, string> environment = null,
+            bool showWindow = false,
+            bool useShell = false,
+            bool redirectOutput = false,
+            bool redirectInput = false
+        )
+        {
+            string newPath = "";
+            // don't modify this one!
+            var oldPath = System.Environment.GetEnvironmentVariable("PATH");
+            var oldEnv = new Dictionary<string, string>();
+            var currentDirectory = System.IO.Directory.GetCurrentDirectory();
+            var pythonBinPath = Directory.GetCurrentDirectory() + "/Library/PythonInstall";
+            try
+            {
+                if (environment != null)
+                {
+                    foreach (var kpv in environment)
+                    {
+                        // GetEnvironmentVariable returns null if the variable is not set.
+                        // we'll use that to unset/reset the envvar later.
+                        oldEnv.Add(kpv.Key, System.Environment.GetEnvironmentVariable(kpv.Key));
+                        System.Environment.SetEnvironmentVariable(kpv.Key, kpv.Value);
+                    }
+                }
+
+                var process = new Process();
+                process.StartInfo.CreateNoWindow = !showWindow;
+                process.StartInfo.UseShellExecute = useShell;
+                process.StartInfo.RedirectStandardInput = redirectInput;
+                process.StartInfo.RedirectStandardError = redirectOutput;
+                process.StartInfo.RedirectStandardOutput = redirectOutput;
+                process.StartInfo.FileName = programName;
+
+                if (arguments != null)
+                {
+                    process.StartInfo.Arguments = string.Join(" ", arguments);
+                }
+                // set the python's executable location as first entry
+                newPath = pythonBinPath;
+#if UNITY_EDITOR_WIN
+                // on windows, add the Scripts directory second
+                var pythonScripts = Path.Combine(pythonBinPath, "Scripts");
+                newPath += Path.PathSeparator + pythonScripts;
+#endif
+                // and add the rest of the PATH
+                // get the value from the environment, as the caller may have set the PATH in the loop above.
+                newPath += Path.PathSeparator + System.Environment.GetEnvironmentVariable("PATH");
+                Environment.SetEnvironmentVariable("PATH", newPath);
+                process.Start();
+                return process;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Unable to launch process: {programName}\n: {e.Message}");
+                return null;
+            }
+            finally
+            {
+                // reset the environment.
+                foreach (var kpv in oldEnv)
+                {
+                    // a null value deletes the environment variable.
+                    System.Environment.SetEnvironmentVariable(kpv.Key, kpv.Value);
+                }
+                Environment.SetEnvironmentVariable("PATH", oldPath);
+            }
+        }
+
+        /// <summary>
+        /// Convenience function to launch a subprocess that is the python interpreter.
+        /// Wraps around SpawnSubprocess.
+        /// </summary>
+        /// <param name="arguments">Arguments to be passed to the launched python interpreter</param>
+        /// <param name="environment">Map of additional environment variables to be
+        /// passed to the subprocess.</param>
+        /// <param name="showWindow">If true, shows a console window</param>
+        /// <param name="useShell">True to set the Process.StartInfo.UseShellExecute to true</param>
+        /// <param name="redirectOutput">True to set the Process.StartInfo.RedirectStandardOutput and Process.StartInfo.RedirectStandardError</param>
+        /// <param name="redirectInput">True to set the Process.StartInfo.RedirectStandardInput</param>
+        /// <returns>A Process object or null on startup failure. It is the caller's responsibility
+        /// to properly dispose of the Process object.
+        public static Process SpawnPythonProcess(IEnumerable<string> arguments = null,
+            Dictionary<string, string> environment = null,
+            bool showWindow = false,
+            bool useShell = false,
+            bool redirectOutput = false,
+            bool redirectInput = false)
+            => SpawnProcess(PythonSettings.kDefaultPythonFullPath, arguments, environment, showWindow, useShell, redirectOutput, redirectInput);
     }
 }

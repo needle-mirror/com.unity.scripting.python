@@ -54,21 +54,17 @@ namespace UnityEditor.Scripting.Python.Tests
         /// <param name="timeout">The maximum length of time for to wait the
         /// process to end, in seconds</param>
         /// <returns></returns>
-        public static IEnumerator WaitForProcessEnd(dynamic process, double timeout = 5.0)
+        public static IEnumerator WaitForProcessEnd(System.Diagnostics.Process process, double timeout = 5.0)
         {
             double initTime = EditorApplication.timeSinceStartup;
             double elapsedTime = 0.0;
             while (elapsedTime < timeout)
             {
                 elapsedTime = EditorApplication.timeSinceStartup - initTime;
-                using(Py.GIL())
+                // popen.poll() returns None if process hasn't finished yet
+                if(process.HasExited)
                 {
-                    dynamic retcode = process.poll();
-                    // popen.poll() returns None if process hasn't finished yet
-                    if(retcode != null)
-                    {
-                        yield break;
-                    }
+                    yield break;
                 }
                 yield return null;
             }

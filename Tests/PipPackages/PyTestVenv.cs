@@ -18,39 +18,39 @@ namespace UnityEditor.Scripting.Python.Tests
 
     public PyTestVenv()
     {
-        using (Py.GIL())
-        {
         // Create a temporary Python virtual environment by spawning a subprocess
 
         path = Path.Combine(Path.GetTempPath(), "py_venv_test");
 
-        dynamic spawn_process = Py.Import("unity_python.common.spawn_process");
-        dynamic shlex = Py.Import("shlex");
-
-        var argsStr = new PyString($"-m venv \"{path}\"");
-        var args = shlex.split(argsStr);
-        dynamic proc = spawn_process.spawn_process_in_environment(
-                PythonRunner.PythonInterpreter,
-                args,
-                wantLogging: true);
-        proc.communicate(); // wait for process to be over
+        var args = new System.Collections.Generic.List<string>();
+        args.Add("-m");
+        args.Add("venv");
+        args.Add($"\"{path}\"");
+        using (var proc = PythonRunner.SpawnPythonProcess(args))
+        {
+            proc.WaitForExit();
+        }
 #if UNITY_EDITOR_WIN
         pythonPath = Path.Combine(path, "Lib", "site-packages");
         interpreter = Path.Combine(path, "Scripts", "python.exe");
 #else
-        pythonPath = Path.Combine(path, "lib", "site-packages", "python3.9", "site-packages");
-        interpreter = Path.Combine(path, "bin", "python3");
+        pythonPath = Path.Combine(path, "lib", "site-packages", $"python{PythonRunner.PythonMajorVersion}.{PythonRunner.PythonMinorVersion}", "site-packages");
+        interpreter = Path.Combine(path, "bin", $"python{PythonRunner.PythonMajorVersion}");
 #endif
         // Install pip-tools into the py venv
         // FIXME: we need to use `--use-deprecated=legacy-resolver` otherwise we get a error about non-conform
         // html headers
-        argsStr = new PyString("-m pip install --use-deprecated=legacy-resolver pip-tools");
-        args = shlex.split(argsStr);
-        proc = spawn_process.spawn_process_in_environment(interpreter, 
-                args,
-                wantLogging: false
-        );
-        proc.communicate();
+        
+        args = new System.Collections.Generic.List<string>();
+        args.Add("-m");
+        args.Add("pip");
+        args.Add("install");
+        args.Add("--use-deprecated=legacy-resolver");
+        args.Add("pip-tools");
+
+        using (var proc = PythonRunner.SpawnPythonProcess(args))
+        {
+            proc.WaitForExit();
         }
     }
 

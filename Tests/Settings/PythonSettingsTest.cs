@@ -5,7 +5,7 @@ using NUnit.Framework;
 using System.Collections;
 using System.Text.RegularExpressions;
 
-namespace UnityEditor.Scripting.Python.Tests
+namespace UnityEditor.Scripting.Python.Tests.Regular
 {
     public class PythonSettingsEditorTest : PipTestBase 
     {
