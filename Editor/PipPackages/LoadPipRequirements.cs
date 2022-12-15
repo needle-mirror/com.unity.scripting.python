@@ -12,7 +12,6 @@ namespace UnityEditor.Scripting.Python
 
         private const string k_packagesUptoDateMessage = "Everything up-to-date";
 
-        [InitializeOnLoadMethod]
         internal static void LoadRequirements()
         {
             var startupCheck = SessionState.GetBool(k_onStartup, true);

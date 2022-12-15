@@ -2,6 +2,9 @@
 
 RELEASE NOTES
 
+## [6.0.1] - 2022-12-15
+* Fixes a race condition with the installation of pip packages on the first or clean startup of a Unity project.
+
 ## [6.0.0] - 2022-08-04
 * Fixes multiple problems with C# objects lifetime and domain reloads.
 * Updated the Python for .NET DLL to a custom patch, based on the official version 3.0.0-rc4. Commit hash: 7ffad42406e36cda9e4be7eb4ad533e45502a60d [of Unity's Pythonnet fork](https://github.com/Unity-Technologies/pythonnet/)

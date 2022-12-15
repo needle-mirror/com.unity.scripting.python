@@ -743,8 +743,13 @@ namespace UnityEditor.Scripting.Python
             RedirectStdout();
 
             ///////////////////////
-            // Finally (this should be last!) we're in a stable state -- allow Python threads to run.
+            // We're in a stable state -- allow Python threads to run.
+            // This should be done after python is properly initialized
             AllowThreads();
+
+            // LoadRequirements used to be [InitialziedOnLoad], but it doesn't call
+            // EnsureInitialized, and might fail because it assumes Python *is* initialized.
+            UnityEditor.Scripting.Python.LoadPipRequirements.LoadRequirements();
         }
 
         /// <summary>
