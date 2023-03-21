@@ -1,7 +1,7 @@
 {
   "name": "com.unity.scripting.python",
   "displayName": "Python Scripting",
-  "version": "7.0.0-pre.1",
+  "version": "7.0.0",
   "unity": "2020.3",
   "description": "Python Scripting is an integration of the open-source Python for .NET project. This package provides the means to import the Python Runtime Environment as a namespace and execute Python scripts from the Unity Editor.",
   "keywords": [
@@ -9,13 +9,17 @@
     "python.net"
   ],
   "category": "Editor",
-  "upmCi": {
-    "footprint": "9b912739ee7180a8981daf10f75d53ea6bf62fc2"
+  "_upm": {
+    "changelog": "REMOVED\n* Removed the remnants of the Python Client API\n* Removed pycoverage initialization/config\n\nKNOWN ISSUES\n* Some Pypi libraries are Intel only on Mac\n\nCHANGES\n* Added a C# API to launch an external process with the PATH set up to point to the Python distribution.\n* Added a C# API to add pip packages\n* Added a C# API to add to site packages\n* Update minimum Unity version to 2020.3\n* Updated the binaries package to 1.3.0-pre.2, which upgrades Python to version 3.10.6"
   },
+  "upmCi": {
+    "footprint": "6a3ed03d09ba738640dcd86cfd7784f8473b2b60"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.scripting.python@7.0/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.scripting.python.git",
     "type": "git",
-    "revision": "19e10423eeda1a48789ef0eda2ad9e56cf0722e0"
+    "revision": "6320defdeeda2d70e2e606f03f16e0e04f02a821"
   },
   "samples": [
     {

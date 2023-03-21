@@ -72,7 +72,7 @@ namespace UnityEditor.Scripting.Python
         const string dynLibExt = "so";
 #endif
         static readonly string BinariesPackageName = $"com.unity.scripting.python.{Platform}";
-        const string BinariesPackageVersion = "1.3.0-pre.2";
+        const string BinariesPackageVersion = "1.3.0";
         const string VersionFile = "Library/PythonInstall/version";
 
         internal const string PythonMajorVersion = "3";

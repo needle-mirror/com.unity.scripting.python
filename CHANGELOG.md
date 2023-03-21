@@ -1,7 +1,7 @@
 # Changes in Python Scripting
 
 RELEASE NOTES
-## [7.0.0-pre.1] - 2022-08-30
+## [7.0.0] - 2023-03-21
 REMOVED
 * Removed the remnants of the Python Client API
 * Removed pycoverage initialization/config
