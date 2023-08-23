@@ -78,6 +78,8 @@ namespace UnityEditor.Scripting.Python
         internal const string PythonMajorVersion = "3";
         internal const string PythonMinorVersion = "10";
 
+        static PyModule scope;
+
         internal enum BinariesPackageReleaseType
         {
             kExperimental, kPreRelease, kRelease
@@ -148,21 +150,17 @@ namespace UnityEditor.Scripting.Python
             EnsureInitialized();
             using (Py.GIL())
             {
-                // Clean up the string.
-                dynamic inspect = Py.Import("inspect");
-                string code = inspect.cleandoc(pythonCodeToExecute);
-
                 if (string.IsNullOrEmpty(scopeName))
                 {
-                    PythonEngine.Exec(code);
+                    PythonEngine.Exec(pythonCodeToExecute);
                 }
                 else
                 {
-                    using (PyModule scope = Py.CreateScope())
-                    {
-                        scope.Set("__name__", scopeName);
-                        scope.Exec(code);
-                    }
+                    if (scope == null)
+                        scope = Py.CreateScope();
+
+                    scope.Set("__name__", scopeName);
+                    scope.Exec(pythonCodeToExecute);
                 }
             }
         }
@@ -308,6 +306,15 @@ namespace UnityEditor.Scripting.Python
                 s_IsInitialized = false;
                 throw;
             }
+        }
+
+        internal static void DisposeScope()
+        {
+            using (Py.GIL())
+            {
+                scope?.Dispose();
+            }
+            scope = null;
         }
 
         static class NativeMethods
@@ -690,7 +697,7 @@ namespace UnityEditor.Scripting.Python
         /// Appends path entries to Python's sys.path. If a given path is already
         /// present in sys.path it will not be reappended.
         /// </summary>
-        /// <param name="sitePackages">IEnumarable<string> of paths to add to sys.path</param>
+        /// <param name="sitePackages">List of paths to add to sys.path</param>
         public static void AddToSitePackages(IEnumerable<string> sitePackages)
         {
             EnsureInitialized();
@@ -934,7 +941,7 @@ namespace UnityEditor.Scripting.Python
         /// <param name="redirectOutput">True to set the Process.StartInfo.RedirectStandardOutput and Process.StartInfo.RedirectStandardError</param>
         /// <param name="redirectInput">True to set the Process.StartInfo.RedirectStandardInput</param>
         /// <returns>A Process object or null on startup failure. It is the caller's responsibility
-        /// to properly dispose of the Process object.
+        /// to properly dispose of the Process object.</returns>
         public static Process SpawnPythonProcess(IEnumerable<string> arguments = null,
             Dictionary<string, string> environment = null,
             bool showWindow = false,

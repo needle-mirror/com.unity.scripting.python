@@ -17,7 +17,7 @@ namespace UnityEditor.Scripting.Python
         public PythonConsoleWindow() {}
         public static void AddToOutput(string input);
         public void OnEnable();
-        [MenuItem(@"Window/General/Python Console")] public static void ShowWindow();
+        [MenuItem(@"Window/General/Python Script Editor")] public static void ShowWindow();
     }
 
     public class PythonInstallException : System.Exception

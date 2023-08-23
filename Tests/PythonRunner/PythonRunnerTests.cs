@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,7 +16,6 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
 {
     internal class PythonRunnerTests
     {
-
         private static string TestsPath = Path.Combine(Path.GetFullPath("Packages/com.unity.scripting.python"), "Tests", "PythonRunner");
         private static Regex PythonExceptionRegex = new Regex(@"Python\.Runtime\.PythonException");
 
@@ -25,11 +24,11 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
         {
             var PIEtype = typeof(PythonInstallException);
             Assert.Throws(PIEtype,
-                    () => throw new PythonInstallException());
+                () => throw new PythonInstallException());
             Assert.Throws(PIEtype,
-                    () => throw new PythonInstallException("yo"));
+                () => throw new PythonInstallException("yo"));
             Assert.Throws(PIEtype,
-                    () => throw new PythonInstallException("yo", new System.NullReferenceException()));
+                () => throw new PythonInstallException("yo", new System.NullReferenceException()));
 
             PythonInstallException xcp;
 
@@ -42,7 +41,6 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
             xcp = new PythonInstallException("yo", new System.NullReferenceException());
             Assert.That(xcp.Message, Does.StartWith("Python Scripting"));
         }
-
 
         [Test]
         public void TestRunString()
@@ -58,10 +56,10 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
             Assert.That(obj, Is.Not.Null);
 
             // Same code, with obvious error
-            Assert.Throws<PythonException>( () =>
-                {
-                    PythonRunner.RunString($"import UnityEngineobj = UnityEngine.GameObject();obj.name = '{goName}'");
-                } );
+            Assert.Throws<PythonException>(() =>
+            {
+                PythonRunner.RunString($"import UnityEngineobj = UnityEngine.GameObject();obj.name = '{goName}'");
+            });
 
             // Testing scopeName parameter
             string scopeName = "__main__";
@@ -76,7 +74,7 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
             scopeName = "__main__";
             UnityEngine.TestTools.LogAssert.Expect(LogType.Log, scopeName);
             PythonRunner.RunString("import UnityEngine;items=[1,2,3];[x for x in items if isinstance(x, UnityEngine.GameObject)];UnityEngine.Debug.Log(__name__)",
-                                   scopeName);
+                scopeName);
         }
 
         [Test]
@@ -88,33 +86,33 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
             string notAPythonFile = Path.Combine(TestsPath, "notAPythonFile.txt");
 
             // null file
-            Assert.Throws<ArgumentNullException>( () =>
-                {
-                    PythonRunner.RunFile(null);
-                } );
+            Assert.Throws<ArgumentNullException>(() =>
+            {
+                PythonRunner.RunFile(null);
+            });
 
             // does not exist
-            Assert.Throws<FileNotFoundException>( () =>
-                {
-                    PythonRunner.RunFile(nonExistantFile);
-                } );
+            Assert.Throws<FileNotFoundException>(() =>
+            {
+                PythonRunner.RunFile(nonExistantFile);
+            });
 
             // not a python file. Throws syntax error. File must not be empty
-            Assert.Throws<PythonException>( () =>
-                {
-                    PythonRunner.RunFile(notAPythonFile);
-                } );
+            Assert.Throws<PythonException>(() =>
+            {
+                PythonRunner.RunFile(notAPythonFile);
+            });
 
             // Indentation error
-            Assert.Throws<PythonException>( () =>
-                {
-                    PythonRunner.RunFile(fileWithErrorsName);
-                } );
+            Assert.Throws<PythonException>(() =>
+            {
+                PythonRunner.RunFile(fileWithErrorsName);
+            });
 
             // finally, a good, valid, file
             // Also testing scopeName parameter
             string scopeName = "__main__";
-            UnityEngine.TestTools.LogAssert.Expect(LogType.Log, scopeName);            
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Log, scopeName);
             PythonRunner.RunFile(validFileName, scopeName);
             // should create a game object named Alice
             var go = GameObject.Find("Alice");
@@ -134,10 +132,10 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
         /// sys.path and that the DLLs from the folder can be loaded.
         /// </summary>
         [Test]
-        public void TestScriptAssembliesInSysPath ()
+        public void TestScriptAssembliesInSysPath()
         {
             PythonRunner.EnsureInitialized();
-            
+
             using (Py.GIL())
             {
                 dynamic sysmod = Py.Import("sys");
@@ -198,7 +196,7 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
         [Test]
         public void TestUndoRedirectStdout()
         {
-            // open python console
+            // Open Python Script Editor window
             PythonConsoleWindow.ShowWindow();
 
             var prevContents = PythonConsoleWindow.s_window.m_outputContents;
@@ -301,6 +299,7 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
         {
             PythonRunner.SpawnShell();
         }
+
 #endif
 
         [Test]
@@ -316,7 +315,7 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
 #else
             string pip = Path.GetFullPath(PythonSettings.kDefaultPythonDirectory) + "/bin/pip";
 #endif
-            using (Process proc = PythonRunner.SpawnProcess(pip, new List<string> {"--version"} ))
+            using (Process proc = PythonRunner.SpawnProcess(pip, new List<string> {"--version"}))
             {
                 Assert.That(proc, Is.Not.Null);
                 proc.WaitForExit(10000);
@@ -351,4 +350,3 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
         }
     }
 }
-

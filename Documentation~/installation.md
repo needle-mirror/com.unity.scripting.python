@@ -1,25 +1,23 @@
-# System Requirements
+# Installation
 
-* Windows 10+ or macOS High Sierra 10.13+, 64-bit versions only
+To install the Python Scripting package, follow the instructions in the [Package Manager documentation](https://docs.unity3d.com/Manual/upm-ui-install.html).
 
-* [Unity 2023.1](https://unity3d.com/get-unity/download). We recommend installing the latest version of Unity 2023.1 via the Unity Hub; 2020.3 is the minimum.
+## Installation requirements
 
-* Optional: To run the PySide2 example, you will need the [PySide2](https://wiki.qt.io/Qt_for_Python) package (see below).
+* **Unity Editor 2020.3** or later version (recommended).
 
-## Installation
+## Python versions
 
-You can install this package through the Package Manager or via your project’s manifest.
+The Python Scripting package requires and includes the following specific libraries:
 
-In Unity 2022.1 and above:
-* Open the [Package Manager Project Settings](https://docs.unity3d.com/Manual/class-PackageManager.html).
-* Enable the **Enable Pre-release packages** checkbox.
-* Open the [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
-* Click the **Packages** dropdown and select **Unity Registry**.
-* Find and select `Python Scripting` in the list of packages, and click **Install**. 
+* Python 3.10.6
+* Python for .NET 3.0.0.0
 
-In Unity 2021.2:
-* Open the [Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
-* Click the **+** dropdown and select **Add package by name**.
-* Enter `com.unity.scripting.python`, and click **Add**. 
+The Unity Editor automatically installs and uses them when you install the Python Scripting package.
 
-Once the installation process is complete, "Python successfully installed" will appear in the Console.
+>[!NOTE]
+>The Unity Editor [Project Settings](ref-project-settings.md) window displays the current Python and Python for .NET versions installed and used by the Python Scripting package but you can't change them.
+
+## Additional Python modules
+
+* [Install additional Python modules and packages](install-python-modules.md) to extend Python abilities in your Unity project

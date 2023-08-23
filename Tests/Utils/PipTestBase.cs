@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using UnityEngine;
 using NUnit.Framework;
 
@@ -18,9 +18,9 @@ namespace UnityEditor.Scripting.Python.Tests
             Directory.CreateDirectory(TemporaryFolder);
         }
 
-         [TearDown]
-         public virtual void Term()
-         {
+        [TearDown]
+        public virtual void Term()
+        {
             // if the folder exists in the AssetDatabase, remove it
             // with AssetDatabase to avoid "Files not cleaned up after test" warnings.
             var tempFolderRelPath = "Assets/" + k_temporaryFolderPrefix;
@@ -30,9 +30,9 @@ namespace UnityEditor.Scripting.Python.Tests
             }
 
             if (Directory.Exists(TemporaryFolder))
-             {
-                 Directory.Delete(TemporaryFolder, recursive: true);
-             }
+            {
+                Directory.Delete(TemporaryFolder, recursive: true);
+            }
         }
     }
 }

@@ -40,8 +40,8 @@ namespace UnityEditor.Scripting.Python.Samples
             CreateOrReinitialize();
         }
 
-       static void CreateOrReinitialize()
-       {
+        static void CreateOrReinitialize()
+        {
             // You can manually add the sample directory to your sys.path in
             // the Python Settings under site-packages. Or you can do it
             // programmatically like so.

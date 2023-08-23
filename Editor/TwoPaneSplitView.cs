@@ -27,7 +27,7 @@ namespace UnityEditor.UIElements
             Vertical
         }
 
-        public new class UxmlFactory : UxmlFactory<TwoPaneSplitView, UxmlTraits> { }
+        public new class UxmlFactory : UxmlFactory<TwoPaneSplitView, UxmlTraits> {}
 
         public new class UxmlTraits : VisualElement.UxmlTraits
         {
@@ -103,7 +103,7 @@ namespace UnityEditor.UIElements
             int fixedPaneIndex,
             float fixedPaneStartDimension,
             Orientation orientation,
-            int buffer ) : this()
+            int buffer) : this()
         {
             Init(fixedPaneIndex, fixedPaneStartDimension, orientation, buffer);
         }
@@ -351,7 +351,7 @@ namespace UnityEditor.UIElements
                     m_Pane.style.height = newDimension;
                     if (m_SplitView.m_FixedPaneIndex == 0)
                         target.style.top = newDimension - 2;
-                        // Ensure the dragline and its anchor remain centered.
+                    // Ensure the dragline and its anchor remain centered.
                     else
                         target.style.top = m_SplitView.resolvedStyle.height - newDimension;
                 }

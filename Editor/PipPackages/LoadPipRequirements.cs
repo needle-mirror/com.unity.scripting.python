@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.IO;
 
 namespace UnityEditor.Scripting.Python.Packages
@@ -7,7 +7,7 @@ namespace UnityEditor.Scripting.Python.Packages
     {
         private const string k_sessionSettingPrefix = "PythonForUnity_";
         private const string k_sessionPipRequirements = k_sessionSettingPrefix + "PipRequirements";
-        
+
         internal const string k_onStartup = k_sessionSettingPrefix + "PipRequirementsStartupCheck";
 
         private const string k_packagesUptoDateMessage = "Everything up-to-date";

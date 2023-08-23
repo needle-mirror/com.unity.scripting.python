@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 
 using UnityEngine;
@@ -8,7 +8,6 @@ using NUnit.Framework;
 
 namespace UnityEditor.Scripting.Python.Tests
 {
-
     /// <summary>
     /// Implement waiting methods. We leverage the UnityTest attribute
     /// for our waits. Contrary to regular C#, we can nest `yield return` calls
@@ -30,17 +29,17 @@ namespace UnityEditor.Scripting.Python.Tests
         {
             double initTime = EditorApplication.timeSinceStartup;
             double elapsedTime = 0.0;
-            while ( elapsedTime < waitTime)
+            while (elapsedTime < waitTime)
             {
                 elapsedTime = EditorApplication.timeSinceStartup - initTime;
-                if(condition != null && condition())
+                if (condition != null && condition())
                 {
                     yield break;
                 }
                 yield return null;
             }
 
-            if(condition != null)
+            if (condition != null)
             {
                 Assert.Fail("Condition in the loop never evaluated to True");
             }
@@ -62,7 +61,7 @@ namespace UnityEditor.Scripting.Python.Tests
             {
                 elapsedTime = EditorApplication.timeSinceStartup - initTime;
                 // popen.poll() returns None if process hasn't finished yet
-                if(process.HasExited)
+                if (process.HasExited)
                 {
                     yield break;
                 }
@@ -72,4 +71,3 @@ namespace UnityEditor.Scripting.Python.Tests
         }
     }
 }
-

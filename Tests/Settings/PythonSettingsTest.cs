@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace UnityEditor.Scripting.Python.Tests.Regular
 {
-    public class PythonSettingsEditorTest : PipTestBase 
+    public class PythonSettingsEditorTest : PipTestBase
     {
         [Test]
         public void TestShortPythonVersion()
@@ -28,19 +28,14 @@ namespace UnityEditor.Scripting.Python.Tests.Regular
         [Test]
         public void TestSitePackagesChanged()
         {
-            if (PythonSettings.SitePackagesChanged)
-            {
-                Assert.Ignore("Unable to test site-packages changes since they're already changed");
-            }
+            Assume.That(PythonSettings.SitePackagesChanged, Is.False, "Unable to test site-packages changes since they're already changed");
 
-            var settings = PythonSettings.Instance;
+            string[] sitePackages = PythonSettings.GetSitePackages();
 
-            string [] sitePackages = settings.m_sitePackages;
-
-            PythonSettings.Instance.m_sitePackages = new string [] {"asjkfjas"};
+            PythonSettings.SetSitePackages(new string[] { "asjkfjas" });
             Assert.That(PythonSettings.SitePackagesChanged);
 
-            PythonSettings.Instance.m_sitePackages = sitePackages;
+            PythonSettings.SetSitePackages(sitePackages);
             Assert.That(!PythonSettings.SitePackagesChanged);
         }
 

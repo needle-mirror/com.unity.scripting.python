@@ -11,13 +11,14 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Scripting.Python
 {
+    // TODO: Ultimately, this class should be renamed to PythonScriptEditorWindow.
     [System.Serializable]
     public class PythonConsoleWindow : EditorWindow
     {
-#region Window
+        #region Window
 
         // Menu item which calls the window.
-        [MenuItem("Window/General/Python Console")]
+        [MenuItem("Window/General/Python Script Editor")]
         public static void ShowWindow()
         {
             s_window = GetWindow<PythonConsoleWindow>();
@@ -43,12 +44,12 @@ namespace UnityEditor.Scripting.Python
             {
                 items[top] = item;
                 top = (top + 1) % items.Length;
-                currentSize = Math.Min(currentSize+1, items.Length);
+                currentSize = Math.Min(currentSize + 1, items.Length);
             }
 
             public T Pop()
             {
-                if(IsEmpty())
+                if (IsEmpty())
                 {
                     throw new InvalidOperationException("Popping from an empty stack");
                 }
@@ -79,7 +80,7 @@ namespace UnityEditor.Scripting.Python
         {
             m_textFieldCode.SetValueWithoutNotify(newText);
             // make sure the cursor stays at the right position
-            var index = m_code==null ? 0 : m_code.Length;
+            var index = m_code == null ? 0 : m_code.Length;
             m_textFieldCode.SelectRange(index, index);
             m_textFieldCode.MarkDirtyRepaint();
             m_performedUndoRedo = true;
@@ -161,7 +162,7 @@ namespace UnityEditor.Scripting.Python
             m_textFieldOutput.value = m_outputContents;
 
             // Set up the Undo handling
-            // Use the event to add to the undo stack and collapse the stack to 
+            // Use the event to add to the undo stack and collapse the stack to
             // give a feeling closer to a real text editor undo
             m_textFieldCode.RegisterCallback<ChangeEvent<string>>(OnCodeInput);
 
@@ -183,15 +184,16 @@ namespace UnityEditor.Scripting.Python
             // will never go to the console output.
             s_window = this;
         }
-#endregion
+
+        #endregion
 
 
-#region Class Variables
+        #region Class Variables
 
         // Keep a reference on the Window for two reasons:
         // 1. Better performance
         // 2. AddToOutput is called from thread other than the main thread
-        //    and it triggers a name search, which can only be done in the 
+        //    and it triggers a name search, which can only be done in the
         //    main thread
         internal static PythonConsoleWindow s_window = null;
 
@@ -221,12 +223,12 @@ namespace UnityEditor.Scripting.Python
 
         Scroller m_scrollerOutput;
         Scroller m_scrollerCode;
-#endregion
+        #endregion
 
         #region Event Functions
 
         int m_undoGroupCount = 0;
-        
+
         // Text is inputed into the Code text area.
         // Used to collapse the undo stack so it's (mostly) consistent with a text editor.
         void OnCodeInput(ChangeEvent<string> e)
@@ -250,7 +252,7 @@ namespace UnityEditor.Scripting.Python
             else
             {
                 // collapse undo operations after 0.333 seconds.
-                for(int i = 0; i < m_undoGroupCount; i++)
+                for (int i = 0; i < m_undoGroupCount; i++)
                 {
                     m_undoStack.Pop();
                 }
@@ -258,7 +260,7 @@ namespace UnityEditor.Scripting.Python
             }
             lastEditTime = curTime;
         }
-        
+
         const string k_undoShortcutBindingID = "Main Menu/Edit/Undo";
         const string k_redoShortcutBindingID = "Main Menu/Edit/Redo";
 
@@ -280,7 +282,7 @@ namespace UnityEditor.Scripting.Python
 
         // Were the right key pressed? This variable is used by the subsequent code to keep track of the two events generated on key press.
         bool m_wereActionEnterPressed;
-        // Key(s) are pressed while the Code area is in focus. 
+        // Key(s) are pressed while the Code area is in focus.
         void OnExecute(KeyDownEvent e)
         {
             // Verify that the Action (Control/Command) and Return (Enter/KeypadEnter) keys were pressed, or that the KeypadEnter was pressed.
@@ -296,7 +298,12 @@ namespace UnityEditor.Scripting.Python
                 else
                 {
                     ExecuteAll();
+                    e.StopPropagation();
+#if UNITY_2023_2_OR_NEWER
+                    (e.target as VisualElement)?.focusController?.IgnoreEvent(e);
+#else
                     e.PreventDefault();
+#endif
                 }
             }
 
@@ -305,28 +312,40 @@ namespace UnityEditor.Scripting.Python
             // Since it is responsible for writing into the textField, we here prevent its default proceedings.
             if (e.keyCode == KeyCode.None && m_wereActionEnterPressed == true)
             {
+                e.StopPropagation();
+#if UNITY_2023_2_OR_NEWER
+                (e.target as VisualElement)?.focusController?.IgnoreEvent(e);
+#else
                 e.PreventDefault();
+#endif
                 m_wereActionEnterPressed = false;
             }
 
-            if(IsShortcutPressed(k_undoShortcutBindingID, e))
+            if (IsShortcutPressed(k_undoShortcutBindingID, e))
             {
                 PerformUndo();
                 // This is MY event!
                 // Nobody else is allowed to have it.
-                e.PreventDefault();
                 e.StopPropagation();
+#if UNITY_2023_2_OR_NEWER
+                (e.target as VisualElement)?.focusController?.IgnoreEvent(e);
+#else
+                e.PreventDefault();
+#endif
                 return;
             }
 
-            if(IsShortcutPressed(k_redoShortcutBindingID, e))
+            if (IsShortcutPressed(k_redoShortcutBindingID, e))
             {
                 PerformRedo();
                 // This is MY event!
                 // Nobody else is allowed to have it.
-                e.PreventDefault();
                 e.StopPropagation();
-                return;
+#if UNITY_2023_2_OR_NEWER
+                (e.target as VisualElement)?.focusController?.IgnoreEvent(e);
+#else
+                e.PreventDefault();
+#endif
             }
         }
 
@@ -341,7 +360,7 @@ namespace UnityEditor.Scripting.Python
         {
             // Let the user select a file.
             var fullFilePath = EditorUtility.OpenFilePanel("Load Python Script", "", "py");
-                
+
             // Verify that the resulting file string is not empty (in case the user hit 'cancel'). If it is, return.
             if (string.IsNullOrEmpty(fullFilePath))
             {
@@ -350,7 +369,7 @@ namespace UnityEditor.Scripting.Python
 
             // Once a file has been chosen, clear the console's current content.
             OnClearCode(e);
-                
+
             // Read and copy the file's content
             var code = System.IO.File.ReadAllText(fullFilePath);
             // And set the text area to it.
@@ -361,7 +380,7 @@ namespace UnityEditor.Scripting.Python
         void OnSave(MouseUpEvent e)
         {
             // Let the user select a save path.
-            var savePath = EditorUtility.SaveFilePanelInProject("Save Current Script", "new_python_script", "py", "Save location of the current script.");
+            var savePath = EditorUtility.SaveFilePanelInProject("Save Current Script", "new_python_script.py", "py", "Save location of the current script.");
 
             //Make sure it is valid (the user did not cancel the save menu).
             if (!string.IsNullOrEmpty(savePath))
@@ -399,11 +418,17 @@ namespace UnityEditor.Scripting.Python
             OnClearCode(e);
             OnClearOutput(e);
         }
-#endregion
+
+        private void OnDisable()
+        {
+            PythonRunner.DisposeScope();
+        }
+
+        #endregion
 
 
-#region Utility Functions
-        
+        #region Utility Functions
+
         // Fetch and return the current console content as a string.
         string GetCode()
         {
@@ -449,7 +474,7 @@ namespace UnityEditor.Scripting.Python
         // Add the inputed string to the output content.
         static public void AddToOutput(string input)
         {
-            if(s_window)
+            if (s_window)
             {
                 s_window.InternalAddToOutput(input);
             }
@@ -464,7 +489,7 @@ namespace UnityEditor.Scripting.Python
             }
         }
 
-        void Execute (string code)
+        void Execute(string code)
         {
             PythonRunner.RunString(code, "__main__");
         }
@@ -475,14 +500,14 @@ namespace UnityEditor.Scripting.Python
             Execute(GetSelectedCode());
         }
 
-        void ExecuteAll ()
+        void ExecuteAll()
         {
             Execute(GetCode());
         }
-       
-#endregion
 
-#region Update Functions
+        #endregion
+
+        #region Update Functions
 
         // For code review: should this use the simple Update() ? Either of them don't seem to make a difference in how quickly the textField is redrawn.
         private void OnGUI()
@@ -501,7 +526,8 @@ namespace UnityEditor.Scripting.Python
             m_scrollerOutput.style.bottom = 7;
             m_scrollerCode.style.bottom = 7;
         }
-#endregion
+
+        #endregion
     }
 
     // This is the pop up used in the creation of menu shortcuts upon script saving.
@@ -538,8 +564,11 @@ namespace UnityEditor.Scripting.Python
             var root = rootVisualElement;
 
             // Construct its contents.
-            m_textfieldMenuName = new TextField { label = "Submenu Name: ",
-                                                value = "Python Scripts/New Python Script" };
+            m_textfieldMenuName = new TextField
+            {
+                label = "Submenu Name: ",
+                value = "Python Scripts/New Python Script"
+            };
             root.Add(m_textfieldMenuName);
             m_helpboxContainer = (new IMGUIContainer(OnValidation));
             root.Add(m_helpboxContainer);
@@ -554,7 +583,7 @@ namespace UnityEditor.Scripting.Python
             m_buttonCommitMenuName.RegisterCallback<MouseUpEvent>(OnCommit);
         }
 
-        // Needed to display a help box corresponding to those used in the default Unity UI. 
+        // Needed to display a help box corresponding to those used in the default Unity UI.
         // Additionally handles whether the button should be active.
         private void OnValidation()
         {
@@ -569,6 +598,7 @@ namespace UnityEditor.Scripting.Python
                 m_buttonCommitMenuName.SetEnabled(true);
             }
         }
+
         void OnInspectorUpdate()
         {
             Repaint();
@@ -590,7 +620,7 @@ namespace UnityEditor.Scripting.Python
             if (ValidateMenuName())
             {
                 // Let the user select a save path.
-                string pySavePath = EditorUtility.SaveFilePanelInProject("Save Current Script & Create Menu Shortcut", "new_python_script", "py", "Save location of the current script, as well as that of its menu shortcut.");
+                string pySavePath = EditorUtility.SaveFilePanelInProject("Save Current Script & Create Menu Shortcut", "new_python_script.py", "py", "Save location of the current script, as well as that of its menu shortcut.");
 
                 //Make sure it is valid (the user did not cancel the save menu).
                 if (!string.IsNullOrEmpty(pySavePath))
@@ -652,15 +682,15 @@ namespace UnityEditor.Scripting.Python
             string className = $"MenuItem_{scriptName}_Class";
 
             string scriptContents = "using UnityEditor;\n"
-                                  + "using UnityEditor.Scripting.Python;\n"
-                                  + "\npublic class " + className + "\n"
-                                  + "{\n"
-                                  + "   [MenuItem(\"" + menuName + "\")]\n"
-                                  + "   public static void " + scriptName + "()\n"
-                                  + "   {\n"
-                                  + "       PythonRunner.RunFile(\"" + pySavePath + "\");\n"
-                                  + "       }\n"
-                                  + "};\n";
+                + "using UnityEditor.Scripting.Python;\n"
+                + "\npublic class " + className + "\n"
+                + "{\n"
+                + "   [MenuItem(\"" + menuName + "\")]\n"
+                + "   public static void " + scriptName + "()\n"
+                + "   {\n"
+                + "       PythonRunner.RunFile(\"" + pySavePath + "\");\n"
+                + "       }\n"
+                + "};\n";
 
             try
             {
@@ -673,7 +703,6 @@ namespace UnityEditor.Scripting.Python
 
                 AssetDatabase.Refresh();
             }
-
             catch (Exception e)
             {
                 Debug.LogError("Failure to create the menu item for this Python script.\n" + e.Message);
@@ -693,6 +722,7 @@ namespace UnityEditor.Scripting.Python
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         #endregion
     }
 }

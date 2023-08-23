@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using Python.Runtime;
 using System.Runtime.CompilerServices;
 
-[assembly:InternalsVisibleTo("PythonRunnerTests")]
+[assembly: InternalsVisibleTo("PythonRunnerTests")]
 
 namespace UnityEditor.Scripting.Python
 {
@@ -14,7 +14,6 @@ namespace UnityEditor.Scripting.Python
     /// </summary>
     public sealed class PythonSettings : ScriptableObject
     {
-
         /// <summary>
         /// Current project directory, with a trailing slash
         /// </summary>
@@ -31,6 +30,9 @@ namespace UnityEditor.Scripting.Python
         public const string kDefaultPython = kDefaultPythonDirectory + "/bin/python" + PythonRunner.PythonMajorVersion;
 #endif
 
+        /// <summary>
+        /// Full path to the Python executable.
+        /// </summary>
         public static string kDefaultPythonFullPath => Path.GetFullPath(kDefaultPython);
 
         internal const string kPipRequirementsFile = "ProjectSettings/requirements.txt";
@@ -48,7 +50,7 @@ namespace UnityEditor.Scripting.Python
         /// </summary>
         public static string Version
         {
-            get 
+            get
             {
                 if (string.IsNullOrEmpty(_version))
                 {
@@ -71,7 +73,7 @@ namespace UnityEditor.Scripting.Python
                         }
                     }
                 }
-                return _version; 
+                return _version;
             }
         }
 
@@ -92,7 +94,7 @@ namespace UnityEditor.Scripting.Python
         /// Set via the serializedObject workflow.
         #pragma warning disable 0649
         [SerializeField]
-        internal string [] m_sitePackages = new string[]{"Assets/site-packages"};
+        string[] m_sitePackages = new string[] {};
         #pragma warning restore 0649
 
         /// <summary>
@@ -103,11 +105,24 @@ namespace UnityEditor.Scripting.Python
         /// This is a copy; avoid calling SitePackages in a loop.
         /// </summary>
         /// <returns>A string array of the site-packages</returns>
-        public static string [] GetSitePackages()
+        public static string[] GetSitePackages()
         {
             return (string[])Instance.m_sitePackages.Clone();
         }
-        string [] m_originalSitePackages;
+
+        // Only used in tests: PythonSettingsEditorTest.TestSitePackagesChanged
+        internal static void SetSitePackages(string[] value)
+        {
+            Instance.m_sitePackages = (string[])value.Clone();
+        }
+
+        internal static void ApplyChanges()
+        {
+            var sitePackages = GetSitePackages();
+            PythonRunner.AddToSitePackages(sitePackages);
+        }
+
+        string[] m_originalSitePackages; // To track changes that require a restart
 
         internal static bool SitePackagesChanged
         {
@@ -140,7 +155,8 @@ namespace UnityEditor.Scripting.Python
                     }
 
                     // Remember the original settings on startup.
-                    s_Instance.m_originalSitePackages = GetSitePackages();
+                    var sitePackages = GetSitePackages();
+                    s_Instance.m_originalSitePackages = sitePackages;
                 }
                 return s_Instance;
             }
@@ -180,7 +196,10 @@ namespace UnityEditor.Scripting.Python
     {
         static class Styles
         {
-            public static readonly GUIContent sitePackages = new GUIContent("Package Directories", "Directories where your custom scripts are stored. Added to your sys.path ahead of the system sys.path. They are added both to the in-process and out-of-process Python APIs. Relative paths are interpreted within the Unity virtual file system.");
+            public static readonly GUIContent sitePackages = new GUIContent(
+                "Package Directories",
+                "Add paths to folders that contain your own Python modules and packages to extend Python abilities " +
+                "in your Unity project.\n\nRelative paths are interpreted within the Unity virtual file system.");
         }
 
         internal static string ShortPythonVersion(string longPythonVersion)
@@ -213,14 +232,16 @@ namespace UnityEditor.Scripting.Python
             {
                 Debug.LogException(xcp);
             }
-            if (GUI.changed) {
+            if (GUI.changed)
+            {
                 var settings = (PythonSettings)target;
                 EditorUtility.SetDirty(settings);
                 settings.Save();
             }
         }
-        bool sitePackagesChangesPending = false;
-        bool sitePackagesChangesApplied = false;
+
+        bool m_SitePackagesChangesPending = false;
+
         /// <summary>
         /// Draw the editor UI in immediate mode.
         ///
@@ -233,19 +254,19 @@ namespace UnityEditor.Scripting.Python
             // Settings for out-of-process next.
             // TODO: nicer UI.
 
-            var settings = (PythonSettings)target;
+            EditorGUILayout.LabelField("Versions", EditorStyles.boldLabel);
 
             // TODO: label + selectable label so users can copy-paste package version
             // (and the same for all versions below)
-            EditorGUILayout.LabelField("Package Version: " + PythonSettings.Version);
+            EditorGUILayout.LabelField("Package: " + PythonSettings.Version);
 
             EditorGUILayout.LabelField(
-                    new GUIContent("Python Version: " + ShortPythonVersion(PythonRunner.PythonVersion),
-                        "Python Scripting is running Python version " + PythonRunner.PythonVersion));
+                new GUIContent("Python: " + ShortPythonVersion(PythonRunner.PythonVersion),
+                    "Python Scripting is running Python version " + PythonRunner.PythonVersion));
 
             EditorGUILayout.LabelField(
-                    new GUIContent("Python for .NET Version: " + PythonSettings.PythonNetVersion,
-                        "Python Scripting is using Python for .NET version " + PythonSettings.PythonNetVersion));
+                new GUIContent("Python for .NET: " + PythonSettings.PythonNetVersion,
+                    "Python Scripting is using Python for .NET version " + PythonSettings.PythonNetVersion));
 
             EditorGUILayout.Separator();
 
@@ -256,41 +277,62 @@ namespace UnityEditor.Scripting.Python
             // to offer the usual array modification workflow in the UI.
             // TODO: make this much prettier.
             var sitePackagesArray = serializedObject.FindProperty("m_sitePackages");
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.PropertyField(sitePackagesArray, Styles.sitePackages, true);
-            if (EditorGUI.EndChangeCheck())
-            {
-                // site packages changes pending, show the button.
-                sitePackagesChangesPending = true;
-                serializedObject.ApplyModifiedProperties();
-            }
 
-            if (sitePackagesChangesPending)
+            using (var check = new EditorGUI.ChangeCheckScope())
             {
-                if(GUILayout.Button("Apply site packages changes", GUILayout.Width(190)))
+                EditorGUILayout.PropertyField(sitePackagesArray, Styles.sitePackages, true);
+
+                if (check.changed && serializedObject.hasModifiedProperties)
                 {
-                    PythonRunner.AddToSitePackages(PythonSettings.Instance.m_sitePackages);
-                    // Even when modified once, we need to show the message.
-                    sitePackagesChangesApplied = true;
-                    sitePackagesChangesPending = false;
+                    m_SitePackagesChangesPending = true;
                 }
             }
 
-            if (PythonSettings.SitePackagesChanged && sitePackagesChangesApplied)
+            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUI.DisabledScope(!m_SitePackagesChangesPending))
             {
-                EditorGUILayout.HelpBox("The pacakges search path has been modified. A Unity restart may be required.", MessageType.Warning);
-                
+                GUI.SetNextControlName("Buttons");
+
+                if (GUILayout.Button("Apply", GUILayout.Width(100)))
+                {
+                    GUI.FocusControl("Buttons");
+                    serializedObject.ApplyModifiedProperties();
+                    PythonSettings.ApplyChanges();
+
+                    m_SitePackagesChangesPending = false;
+                }
+
+                if (GUILayout.Button("Revert", GUILayout.Width(100)))
+                {
+                    GUI.FocusControl("Buttons");
+                    serializedObject.Update();
+
+                    m_SitePackagesChangesPending = false;
+                }
+            }
+
+            if (PythonSettings.SitePackagesChanged)
+            {
+                EditorGUILayout.HelpBox("The package search path has been modified. A Unity restart is required.", MessageType.Warning);
             }
 
             EditorGUILayout.Separator();
 
-#if UNITY_EDITOR_WIN|| UNITY_EDITOR_OSX
-            if (GUILayout.Button(new GUIContent("Launch Terminal", "Launches a terminal window with Unity Python in its PATH."), GUILayout.Width(125)))
+#if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX
+            // Terminal section.
+            EditorGUILayout.LabelField("Terminal", EditorStyles.boldLabel);
+
+            if (GUILayout.Button(
+                new GUIContent("Launch Terminal",
+                    "Open a Terminal set up with the Python executable provided with the Python Scripting package." +
+                    "\n\nUse the Terminal to install Python modules and packages with pip, for example."),
+                GUILayout.Width(125)))
             {
                 PythonRunner.SpawnShell();
             }
 #endif
         }
+
         [SettingsProvider]
         static SettingsProvider CreatePythonSettingsProvider()
         {
