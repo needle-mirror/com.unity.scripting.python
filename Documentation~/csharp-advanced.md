@@ -1,5 +1,7 @@
 # Use Python APIs in C#
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Use Python APIs in C# with [Python for .NET](https://pythonnet.github.io/).
 
 ## Requirements and syntax

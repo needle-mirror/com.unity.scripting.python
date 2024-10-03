@@ -1,5 +1,7 @@
 # Python Script Editor
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Use the Python Script Editor to [start scripting](get-started.md) in Python in Unity.
 
 To open the Python Script Editor window, from the main menu of the Editor, select **Window** > **General** > **Python Script Editor**.

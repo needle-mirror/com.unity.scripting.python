@@ -1,5 +1,7 @@
 # Get started with the Python Script Editor
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Use the [Python Script Editor](ref-script-editor.md) window to script in Python in the Unity Editor.
 
 From there, Python for .NET gives you access to the whole Unity C# API (like `UnityEditor` and `UnityEngine` functionalities).

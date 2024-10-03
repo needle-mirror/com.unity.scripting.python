@@ -1,4 +1,0 @@
-numpy==1.18.2
-vg==1.7.0
-Brotli==1.0.7
-pip-tools

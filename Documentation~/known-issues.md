@@ -1,6 +1,8 @@
 
 # Known issues and limitations
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 #### Editor-only feature not for runtime builds
 
 The Python Scripting package is a feature designed to work only in the Unity Editor. It isn't available in runtime builds.

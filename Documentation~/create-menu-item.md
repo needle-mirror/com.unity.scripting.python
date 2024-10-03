@@ -1,5 +1,7 @@
 # Create a menu item that calls your script
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Use the [Python Script Editor](ref-script-editor.md) to create a custom menu item that executes a Python script from the Unity Editor menu.
 
 ## Create a menu item

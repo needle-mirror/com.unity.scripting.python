@@ -8,7 +8,12 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.UIElements
 {
+#if UNITY_2023_3_OR_NEWER
+    [UxmlElement]
+    internal partial class TwoPaneSplitView : VisualElement
+#else
     internal class TwoPaneSplitView : VisualElement
+#endif
     {
         private static readonly string s_UssClassName = "unity-two-pane-split-view";
         private static readonly string s_ContentContainerClassName = "unity-two-pane-split-view__content-container";
@@ -27,6 +32,7 @@ namespace UnityEditor.UIElements
             Vertical
         }
 
+#if !UNITY_2023_3_OR_NEWER
         public new class UxmlFactory : UxmlFactory<TwoPaneSplitView, UxmlTraits> {}
 
         public new class UxmlTraits : VisualElement.UxmlTraits
@@ -55,6 +61,7 @@ namespace UnityEditor.UIElements
                 ((TwoPaneSplitView)ve).Init(fixedPaneIndex, fixedPaneInitialSize, orientation, buffer);
             }
         }
+#endif
 
         private VisualElement m_LeftPane;
         private VisualElement m_RightPane;
@@ -74,6 +81,41 @@ namespace UnityEditor.UIElements
         private int m_Buffer;
 
         private SquareResizer m_Resizer;
+
+#if UNITY_2023_3_OR_NEWER
+        // Property used to associate with uxml attribute "fixed-pane-index"
+        [UxmlAttribute]
+        private int fixedPaneIndex
+        {
+            get => m_FixedPaneIndex;
+            set => m_FixedPaneIndex = value;
+
+        }
+
+        // Property used to associate with uxml attribute "fixed-pane-initial-size"
+        [UxmlAttribute]
+        private float fixedPaneInitialSize
+        {
+            get => m_FixedPaneInitialDimension;
+            set => m_FixedPaneInitialDimension = value;
+        }
+
+        // Property used to associate with uxml attribute "buffer"
+        [UxmlAttribute]
+        private int buffer
+        {
+            get => m_Buffer;
+            set => m_Buffer = value;
+        }
+
+        // Property used to associate with uxml attribute "orientation"
+        [UxmlAttribute]
+        private string orientation
+        {
+            get => m_Orientation == Orientation.Horizontal ? "horizontal" : "vertical";
+            set => m_Orientation = value == "horizontal" ? Orientation.Horizontal : Orientation.Vertical;
+        }
+#endif
 
         public TwoPaneSplitView()
         {
@@ -97,6 +139,14 @@ namespace UnityEditor.UIElements
             m_DragLine.name = "unity-dragline";
             m_DragLine.AddToClassList(s_HandleDragLineClassName);
             m_DragLineAnchor.Add(m_DragLine);
+
+#if UNITY_2023_3_OR_NEWER
+            // Register a callback for attach to panel event to initialize the window using the data read from uxml files
+            RegisterCallback<AttachToPanelEvent>(evt =>
+            {
+                Init(m_FixedPaneIndex, m_FixedPaneInitialDimension, m_Orientation, m_Buffer);
+            });
+#endif
         }
 
         public TwoPaneSplitView(

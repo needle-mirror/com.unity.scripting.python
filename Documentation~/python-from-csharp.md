@@ -1,5 +1,7 @@
 # Run Python code from C#
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Run Python code directly from C# to integrate your own features in Unity.
 
 | Section | Description |

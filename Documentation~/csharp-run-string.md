@@ -1,5 +1,7 @@
 # Run Python instructions from C#
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Use the `PythonRunner.RunString` method to execute a single Python instruction from C#.
 
 ## Example: create a menu item that executes a simple Python instruction

@@ -1,5 +1,7 @@
 # Python Scripting package
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 >[!NOTE]
 >To use the Python Scripting package, you must install it separately, in addition to the Unity Editor. For detailed information about package requirements and installation instructions, refer to [Installation](installation.md).
 

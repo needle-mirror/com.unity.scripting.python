@@ -1,5 +1,7 @@
 # Python Scripting Project Settings
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Use the Python Scripting project settings to:
 * Know the Python and Python for .NET versions used by the current Python Scripting package version.
 * Extend Python abilities in your Unity project by [installing extra Python modules and packages](install-python-modules.md).

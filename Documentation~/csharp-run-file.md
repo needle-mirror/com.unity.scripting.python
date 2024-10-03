@@ -1,5 +1,7 @@
 # Run Python script files from C#
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Use the `PythonRunner.RunFile` method to execute a Python script file from C#.
 
 ## Example: ensure GameObject names in the Scene

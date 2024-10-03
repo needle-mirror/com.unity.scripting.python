@@ -1,5 +1,7 @@
 # Install Python modules and packages
 
+[!INCLUDE [banner-message](banner-message.md)]
+
 Extend Python abilities in your Unity project with additional Python modules and packages:
 * [Access your own Python modules and packages](#access-your-own-python-modules-and-packages).
 * [Manually install extra Python packages with pip](#manually-install-a-python-package-with-pip).

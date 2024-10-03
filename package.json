@@ -1,7 +1,7 @@
 {
   "name": "com.unity.scripting.python",
   "displayName": "Python Scripting",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "unity": "2020.3",
   "description": "Optimize Unity Editor workflows for your VFX/animation pipelines using Python scripting:\n- Automate repetitive tasks to speed up your artistic process.\n- Integrate your custom pipeline tools within Unity.\n- Increase interoperability with other software of your pipeline.\nThis package includes and uses Python 3.10.6 and Python for .NET 3.0.0.0 and is Editor-only (not available in runtime builds).",
   "keywords": [
@@ -9,17 +9,20 @@
     "python.net"
   ],
   "category": "Editor",
+  "relatedPackages": {
+    "com.unity.scripting.python.tests": "7.0.2"
+  },
   "_upm": {
-    "changelog": "### Changed\n* Renamed the \"Python Console\" menu item to \"Python Script Editor\" to match the corresponding window's name.\n* Improved UX in Project Settings for Site Packages management and Terminal access.\n* The Python context now persists between command executions, and resets when the Python Script Editor window is closed and reopened.\n\n### Fixed\n* Added a systematic pop-up message for users trying to overwrite a script that already exists.\n* Removed a Python Script Editor content cleanup method that was causing indentation processing issues leading to a PythonException.\n* Fixed a Console warning on package installation due to `EventBase.PreventDefault` deprecated in Unity Editor 2023.2."
+    "changelog": "### Changed\n* Prepared the package for end of support as of Unity 6.1."
   },
   "upmCi": {
-    "footprint": "229858e7ba76b95ffc4bd7fd4fb22abac05f9212"
+    "footprint": "6f42a29255b9155cef4f8fb366bd7b638ac22b1a"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.scripting.python@7.0/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.scripting.python.git",
     "type": "git",
-    "revision": "897a74d57244232f738140d9889261a544e29c3a"
+    "revision": "f39605488a7d83dd636e9fb4ad4b006bc7b75cd3"
   },
   "samples": [
     {
